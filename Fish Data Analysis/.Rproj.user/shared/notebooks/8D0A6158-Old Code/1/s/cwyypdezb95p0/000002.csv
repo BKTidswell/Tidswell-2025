@@ -1,0 +1,14 @@
+"0","```r
+d <- seq(from = 0, to = 4, by = 0.1)
+a <- seq(from = 0, to = 180, by = 10)
+
+flows <- c(\"Flow 0\", \"Flow 2\")
+ablation <- c(\"No Ablation\", \"Ablated\")
+dark <- c(\"Light\",\"Dark\")
+
+predict_df_da <- expand.grid(Distance = d, Angle = a, Flow = flows, Ablation = ablation, Darkness = dark)
+predict_df_da <- predict_df_da %>% mutate(X_Distance = Distance*(cos(deg2rad(Angle))), Y_Distance = Distance*(sin(deg2rad(Angle))))
+
+predict_df_da <- predict_df_da %>% filter(!(Ablation == \"Ablated\" & Darkness == 'Dark'))
+predict_df_da <- na.omit(predict_df_da)
+```"

@@ -1,0 +1,15 @@
+"0","```r
+count_within_2_aligned <- raw_school_data_both_fish %>% mutate(Tailbeat = round_any(Frame_Num, tailbeat_len)/tailbeat_len+1) %>%
+                                                        filter(Heading_Diff > -30 & Heading_Diff < 30) %>%
+                                                        group_by(Year, Month, Day, Trial, Flow, Ablation, Darkness, Tailbeat, Frame_Num, Fish1) %>%
+                                                        summarise(Count_Fish_in_2BL = sum(Distance <= 2)) %>%
+                                                        ungroup() %>%
+                                                        group_by(Year, Month, Day, Trial, Flow, Ablation, Darkness, Tailbeat) %>%
+                                                        summarise(Mean_Count_Fish_in_2BL = mean(Count_Fish_in_2BL)) %>%
+                                                        ungroup()
+```"
+"1","`summarise()` has grouped output by 'Year', 'Month', 'Day', 'Trial', 'Flow', 'Ablation', 'Darkness', 'Tailbeat',
+'Frame_Num'. You can override using the `.groups` argument.
+`summarise()` has grouped output by 'Year', 'Month', 'Day', 'Trial', 'Flow', 'Ablation', 'Darkness'. You can
+override using the `.groups` argument.
+"

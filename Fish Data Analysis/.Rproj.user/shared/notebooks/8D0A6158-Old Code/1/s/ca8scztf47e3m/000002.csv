@@ -1,0 +1,16 @@
+"0","```r
+ggplot(comp_data, aes(x = Angle, y = Speed_Diff, color = paste(Ablation,Darkness,sep=\"-\"), fill = paste(Ablation,Darkness,sep=\"-\")))+
+  geom_smooth(method = \"gam\", formula = y ~ s(x))+
+  facet_wrap(~ Flow) +
+  theme_light()
+
+ggplot(comp_data, aes(x = Angle, y = quarter_heading_diff, color = paste(Ablation,Darkness,sep=\"-\"), fill = paste(Ablation,Darkness,sep=\"-\")))+
+  geom_smooth(method = \"gam\", formula = y ~ s(x))+
+  facet_wrap(~ Flow) +
+  theme_light()
+
+ggplot(comp_data, aes(x = Angle, y = Sync, color = paste(Ablation,Darkness,sep=\"-\"), fill = paste(Ablation,Darkness,sep=\"-\")))+
+  geom_smooth(method = \"gam\", formula = y ~ s(x))+
+  facet_wrap(~ Flow) +
+  theme_light()
+```"

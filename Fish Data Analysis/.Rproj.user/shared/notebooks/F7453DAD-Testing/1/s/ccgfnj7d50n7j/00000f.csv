@@ -1,0 +1,32 @@
+"0",""
+"0","neuromast_per_area <- neuromast_counts %>% select(-c(All.Superficial,All.Superficial.Area,"
+"0","                                                     Canal.Neuromast,Canal.Neuromast.Area, Length)) %>%"
+"0","                                           pivot_longer(!c(Fish,ID), names_to = ""Area"", values_to = ""Count"") %>%"
+"0","  "
+"0","                                           group_by(Fish,ID) %>%"
+"0","                                           mutate(Percents = Count / sum(Count)) %>%"
+"0","                                           ungroup() %>%"
+"0","  "
+"0","                                           group_by(Fish,Area) %>%"
+"0","                                           summarise(Percents = Percents,"
+"0","                                                     Percents.Mean = mean(Percents),"
+"0","                                                     Percents.SD = sd(Percents))"
+"2","Warning:"
+"2"," [38;5;232mReturning more (or less) than 1 row per `summarise()` group was deprecated in dplyr 1.1.0.
+[36mℹ[38;5;232m Please use `reframe()` instead.
+[36mℹ[38;5;232m When switching from `summarise()` to `reframe()`, remember that `reframe()` always returns an ungrouped data frame and adjust
+  accordingly.
+[90mCall `lifecycle::last_lifecycle_warnings()` to see where this warning was generated.[38;5;232m[39m
+"
+"1","[38;5;232m`summarise()` has grouped output by 'Fish', 'Area'. You can override using the `.groups` argument.[39m
+"
+"0","ggplot(neuromast_per_area, aes(Area, Percents, color = Area))+"
+"0","  facet_wrap(~Fish)+"
+"0","  geom_point()+"
+"0","  geom_point(aes(y = Percents.Mean), color = ""black"")+"
+"0","  geom_errorbar(aes(ymin=Percents.Mean-Percents.SD,"
+"0","                    ymax=Percents.Mean+Percents.SD), width=.2, color = ""black"")+"
+"0","  ylab(""Percent of Neuromasts"")+"
+"0","  xlab("""")+"
+"0","  theme_classic() +"
+"0","  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))"

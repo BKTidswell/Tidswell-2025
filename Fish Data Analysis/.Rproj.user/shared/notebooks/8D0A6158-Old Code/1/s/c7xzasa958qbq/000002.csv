@@ -1,0 +1,51 @@
+"0","```r
+speed_pred <- predict_df_da %>% mutate(Speed_Diff = predict(speed_diff_glm,predict_df_da))
+
+comp_data <- comp_data %>% mutate(Round_Dist = as.factor(round_any(Distance,1)), Round_Angle = as.factor(round_any(Angle,30)))
+
+ggplot()+
+  geom_boxplot(data = comp_data, aes(x = Round_Dist, y = Speed_Diff))+
+  facet_wrap(~ Flow + Ablation + Darkness) +
+  theme_light()
+
+round_dist_aov <- aov(Speed_Diff ~ Round_Dist*(Flow + Ablation + Darkness + Flow:Ablation + Flow:Darkness), data = comp_data)
+Anova(round_dist_aov)
+
+ggplot()+
+  geom_boxplot(data = comp_data, aes(x = Round_Angle, y = Speed_Diff))+
+  facet_wrap(~ Flow + Ablation + Darkness) +
+  theme_light()
+
+round_angle_aov <- aov(Speed_Diff ~ Round_Angle*(Flow + Ablation + Darkness + Flow:Ablation + Flow:Darkness), data = comp_data)
+Anova(round_angle_aov)
+
+# ggplot()+
+#   geom_point(data = comp_data %>% filter(Speed_Diff <= 2), aes(x = Distance, y = Speed_Diff), alpha = 0.1)+
+#   geom_smooth(data = speed_pred, aes(x = Distance, y = Speed_Diff))+
+#   facet_wrap(~ Flow + Ablation + Darkness) +
+#   theme_light()
+
+# ggplot()+
+#   geom_density_2d_filled(data = comp_data %>% filter(Speed_Diff <= 2), aes(x = Distance, y = Speed_Diff), contour_var = \"ndensity\")+
+#   geom_smooth(data = speed_pred, aes(x = Distance, y = Speed_Diff, color = \"red\"))+
+#   facet_wrap(~ Flow + Ablation + Darkness) +
+#   theme_light()
+
+# ggplot()+
+#   geom_point(data = comp_data %>% filter(Speed_Diff <= 2), aes(x = Angle, y = Speed_Diff), alpha = 0.1)+
+#   geom_smooth(data = speed_pred, aes(x = Angle, y = Speed_Diff))+
+#   facet_wrap(~ Flow + Ablation + Darkness) +
+#   theme_light()
+
+# ggplot()+
+#   geom_density_2d_filled(data = comp_data %>% filter(Speed_Diff <= 2), aes(x = Angle, y = Speed_Diff), contour_var = \"ndensity\")+
+#   geom_smooth(data = speed_pred, aes(x = Angle, y = Speed_Diff, color = \"red\"))+
+#   facet_wrap(~ Flow + Ablation + Darkness) +
+#   theme_light()
+
+ggplot(data = comp_data, aes(x = Angle, y = Distance, z = Speed_Diff))+
+  stat_summary_2d() +
+  facet_wrap(~ Flow + Ablation + Darkness) +
+  scale_fill_viridis(direction = -1) +
+  theme_light()
+```"

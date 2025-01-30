@@ -1,0 +1,57 @@
+"0","```r
+summary(sync_gam)
+```"
+"1","
+Family: gaussian 
+Link function: identity 
+
+Formula:
+Sync ~ s(Distance) + s(Angle) + s(Distance, Angle) + Flow + s(Distance, 
+    by = Flow) + s(Angle, by = Flow) + s(Distance, Angle, by = Flow) + 
+    Darkness + s(Distance, by = Darkness) + s(Angle, by = Darkness) + 
+    s(Distance, Angle, by = Darkness) + Ablation + s(Distance, 
+    by = Ablation) + s(Angle, by = Ablation) + s(Distance, Angle, 
+    by = Ablation)
+
+Parametric coefficients:
+                    Estimate Std. Error t value Pr(>|t|)    
+(Intercept)         0.498899   0.014499  34.408  < 2e-16 ***
+FlowFlow 2          0.001947   0.008395   0.232 0.816658    
+DarknessLight       0.026162   0.011959   2.188 0.028757 *  
+AblationNo Ablation 0.033868   0.009117   3.715 0.000206 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Approximate significance of smooth terms:
+                                            edf Ref.df     F  p-value    
+s(Distance)                           4.000e-01  0.400 0.272 0.741504    
+s(Angle)                              4.000e-01  0.400 6.437 0.108650    
+s(Distance,Angle)                     4.350e-07 27.000 0.000 0.174648    
+s(Distance):FlowFlow 0                6.000e-01  0.600 0.032 0.889908    
+s(Distance):FlowFlow 2                6.000e-01  0.600 0.286 0.678862    
+s(Angle):FlowFlow 0                   6.000e-01  0.600 0.869 0.470246    
+s(Angle):FlowFlow 2                   6.000e-01  0.600 0.563 0.561210    
+s(Distance,Angle):FlowFlow 0          9.390e+00 27.000 0.668 0.007258 ** 
+s(Distance,Angle):FlowFlow 2          4.272e-07 27.000 0.000 0.091091 .  
+s(Distance):DarknessDark              2.985e+00  3.842 1.910 0.146795    
+s(Distance):DarknessLight             1.545e+00  2.060 1.787 0.210966    
+s(Angle):DarknessDark                 3.415e+00  4.320 1.706 0.194475    
+s(Angle):DarknessLight                6.000e-01  0.600 2.240 0.246400    
+s(Distance,Angle):DarknessDark        5.805e-08 27.000 0.000 0.160397    
+s(Distance,Angle):DarknessLight       8.331e+00 27.000 0.556 0.008037 ** 
+s(Distance):AblationAblated           6.000e-01  0.600 4.450 0.102321    
+s(Distance):AblationNo Ablation       3.337e+00  4.274 0.541 0.613520    
+s(Angle):AblationAblated              6.000e-01  0.600 2.876 0.189088    
+s(Angle):AblationNo Ablation          6.000e-01  0.600 0.770 0.496755    
+s(Distance,Angle):AblationAblated     1.649e+01 27.000 1.352 0.000113 ***
+s(Distance,Angle):AblationNo Ablation 2.476e-07 27.000 0.000 0.283585    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Rank: 313/319
+R-sq.(adj) =  0.0237   Deviance explained = 3.75%
+GCV = 0.061076  Scale est. = 0.060197  n = 3828
+"
+"0","```r
+sync_pred <- predict_df %>% mutate(Sync = predict.gam(sync_gam,predict_df))
+```"

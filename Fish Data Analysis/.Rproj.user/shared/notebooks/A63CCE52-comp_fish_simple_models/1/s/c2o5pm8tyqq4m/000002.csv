@@ -1,0 +1,69 @@
+"0","```r
+sin_heading_gam_d <- gam(sin_Heading ~ s(Distance), data = comp_data_near_3)
+sin_heading_gam_d_f <- gam(sin_Heading ~ s(Distance,by=Flow), data = comp_data_near_3)
+sin_heading_gam_d_a <- gam(sin_Heading ~ s(Distance,by=Ablation), data = comp_data_near_3)
+sin_heading_gam_d_d <- gam(sin_Heading ~ s(Distance,by=Darkness), data = comp_data_near_3)
+sin_heading_gam_d_fa <- gam(sin_Heading ~ s(Distance,by=Flow_Ablation), data = comp_data_near_3)
+sin_heading_gam_d_fd <- gam(sin_Heading ~ s(Distance,by=Flow_Darkness), data = comp_data_near_3)
+sin_heading_gam_d_fda <- gam(sin_Heading ~ s(Distance,by=Flow_Ablation_Darkness), data = comp_data_near_3)
+
+sin_heading_gam_ca <- gam(sin_Heading ~ s(cos_Angle), data = comp_data_near_3)
+sin_heading_gam_ca_f <- gam(sin_Heading ~ s(cos_Angle,by=Flow), data = comp_data_near_3)
+sin_heading_gam_ca_a <- gam(sin_Heading ~ s(cos_Angle,by=Ablation), data = comp_data_near_3)
+sin_heading_gam_ca_d <- gam(sin_Heading ~ s(cos_Angle,by=Darkness), data = comp_data_near_3)
+sin_heading_gam_ca_fa <- gam(sin_Heading ~ s(cos_Angle,by=Flow_Ablation), data = comp_data_near_3)
+sin_heading_gam_ca_fd <- gam(sin_Heading ~ s(cos_Angle,by=Flow_Darkness), data = comp_data_near_3)
+sin_heading_gam_ca_fda <- gam(sin_Heading ~ s(cos_Angle,by=Flow_Ablation_Darkness), data = comp_data_near_3)
+
+sin_heading_gam_sa <- gam(sin_Heading ~ s(sin_Angle), data = comp_data_near_3)
+sin_heading_gam_sa_f <- gam(sin_Heading ~ s(sin_Angle,by=Flow), data = comp_data_near_3)
+sin_heading_gam_sa_a <- gam(sin_Heading ~ s(sin_Angle,by=Ablation), data = comp_data_near_3)
+sin_heading_gam_sa_d <- gam(sin_Heading ~ s(sin_Angle,by=Darkness), data = comp_data_near_3)
+sin_heading_gam_sa_fa <- gam(sin_Heading ~ s(sin_Angle,by=Flow_Ablation), data = comp_data_near_3)
+sin_heading_gam_sa_fd <- gam(sin_Heading ~ s(sin_Angle,by=Flow_Darkness), data = comp_data_near_3)
+sin_heading_gam_sa_fda <- gam(sin_Heading ~ s(sin_Angle,by=Flow_Ablation_Darkness), data = comp_data_near_3)
+
+sin_heading_gam_dca <- gam(sin_Heading ~ s(Distance,cos_Angle), data = comp_data_near_3)
+sin_heading_gam_dca_f <- gam(sin_Heading ~ s(Distance,cos_Angle,by=Flow), data = comp_data_near_3)
+sin_heading_gam_dca_a <- gam(sin_Heading ~ s(Distance,cos_Angle,by=Ablation), data = comp_data_near_3)
+sin_heading_gam_dca_d <- gam(sin_Heading ~ s(Distance,cos_Angle,by=Darkness), data = comp_data_near_3)
+sin_heading_gam_dca_fa <- gam(sin_Heading ~ s(Distance,cos_Angle,by=Flow_Ablation), data = comp_data_near_3)
+sin_heading_gam_dca_fd <- gam(sin_Heading ~ s(Distance,cos_Angle,by=Flow_Darkness), data = comp_data_near_3)
+sin_heading_gam_dca_fda <- gam(sin_Heading ~ s(Distance,cos_Angle,by=Flow_Ablation_Darkness), data = comp_data_near_3)
+
+sin_heading_gam_dsa <- gam(sin_Heading ~ s(Distance,sin_Angle), data = comp_data_near_3)
+sin_heading_gam_dsa_f <- gam(sin_Heading ~ s(Distance,sin_Angle,by=Flow), data = comp_data_near_3)
+sin_heading_gam_dsa_a <- gam(sin_Heading ~ s(Distance,sin_Angle,by=Ablation), data = comp_data_near_3)
+sin_heading_gam_dsa_d <- gam(sin_Heading ~ s(Distance,sin_Angle,by=Darkness), data = comp_data_near_3)
+sin_heading_gam_dsa_fa <- gam(sin_Heading ~ s(Distance,sin_Angle,by=Flow_Ablation), data = comp_data_near_3)
+sin_heading_gam_dsa_fd <- gam(sin_Heading ~ s(Distance,sin_Angle,by=Flow_Darkness), data = comp_data_near_3)
+sin_heading_gam_dsa_fda <- gam(sin_Heading ~ s(Distance,sin_Angle,by=Flow_Ablation_Darkness), data = comp_data_near_3)
+
+sin_heading_gam_dcasa <- gam(sin_Heading ~ s(Distance,cos_Angle,sin_Angle), data = comp_data_near_3)
+sin_heading_gam_dcasa_f <- gam(sin_Heading ~ s(Distance,cos_Angle,sin_Angle,by=Flow), data = comp_data_near_3)
+sin_heading_gam_dcasa_a <- gam(sin_Heading ~ s(Distance,cos_Angle,sin_Angle,by=Ablation), data = comp_data_near_3)
+sin_heading_gam_dcasa_d <- gam(sin_Heading ~ s(Distance,cos_Angle,sin_Angle,by=Darkness), data = comp_data_near_3)
+sin_heading_gam_dcasa_fa <- gam(sin_Heading ~ s(Distance,cos_Angle,sin_Angle,by=Flow_Ablation), data = comp_data_near_3)
+sin_heading_gam_dcasa_fd <- gam(sin_Heading ~ s(Distance,cos_Angle,sin_Angle,by=Flow_Darkness), data = comp_data_near_3)
+sin_heading_gam_dcasa_fda <- gam(sin_Heading ~ s(Distance,cos_Angle,sin_Angle,by=Flow_Ablation_Darkness), data = comp_data_near_3)
+
+sin_Heading_AIC <- AIC(sin_heading_gam_d,sin_heading_gam_d_f,sin_heading_gam_d_a,sin_heading_gam_d_d,sin_heading_gam_d_fa,sin_heading_gam_d_fd,sin_heading_gam_d_fda,
+                 sin_heading_gam_ca,sin_heading_gam_ca_f,sin_heading_gam_ca_a,sin_heading_gam_ca_d,sin_heading_gam_ca_fa,sin_heading_gam_ca_fd,sin_heading_gam_ca_fda,
+                 sin_heading_gam_sa,sin_heading_gam_sa_f,sin_heading_gam_sa_a,sin_heading_gam_sa_d,sin_heading_gam_sa_fa,sin_heading_gam_sa_fd,sin_heading_gam_sa_fda,
+                 sin_heading_gam_dca,sin_heading_gam_dca_f,sin_heading_gam_dca_a,sin_heading_gam_dca_d,sin_heading_gam_dca_fa,sin_heading_gam_dca_fd,sin_heading_gam_dca_fda,
+                 sin_heading_gam_dsa,sin_heading_gam_dsa_f,sin_heading_gam_dsa_a,sin_heading_gam_dsa_d,sin_heading_gam_dsa_fa,sin_heading_gam_dsa_fd,sin_heading_gam_dsa_fda,
+                 sin_heading_gam_dcasa,sin_heading_gam_dcasa_f,sin_heading_gam_dcasa_a,sin_heading_gam_dcasa_d,sin_heading_gam_dcasa_fa,sin_heading_gam_dcasa_fd,sin_heading_gam_dcasa_fda)
+
+
+sin_Heading_AIC <- tibble::rownames_to_column(sin_Heading_AIC, \"Model_Name\")
+
+sin_Heading_AIC <- sin_Heading_AIC %>% mutate(Model_Name = fct_reorder(Model_Name, -AIC)) %>% arrange(AIC)
+
+ggplot(sin_Heading_AIC %>% arrange(AIC), aes(x = Model_Name, y = AIC)) +
+  geom_point(color = \"blue\") +
+  xlab(\"\") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  theme_light()+
+  scale_y_reverse() +
+  coord_flip()
+```"

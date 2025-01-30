@@ -1,0 +1,14 @@
+"0","```r
+
+speed_m_all <- glm(Speed_Diff ~ Distance*Angle*(Ablation+Flow+Darkness+Ablation:Flow+Darkness:Flow) +
+                                I(Distance^2)*I(Angle^2)*(Ablation+Flow+Darkness+Ablation:Flow+Darkness:Flow)+
+                                I(Distance^3)*I(Angle^3)*(Ablation+Flow+Darkness+Ablation:Flow+Darkness:Flow)+
+                                I(Distance^4)*I(Angle^4)*(Ablation+Flow+Darkness+Ablation:Flow+Darkness:Flow),
+                        data = comp_data_speed_model)
+
+speed_m_none <- glm(Speed_Diff ~ 1, data = comp_data_speed_model)
+
+speed_m_both <- step(speed_m_none, direction = \"both\", scope = formula(speed_m_all), trace = F)
+
+summary(speed_m_both)
+```"

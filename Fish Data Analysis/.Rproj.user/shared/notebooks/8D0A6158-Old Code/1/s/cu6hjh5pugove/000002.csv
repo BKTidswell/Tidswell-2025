@@ -1,0 +1,6 @@
+"0","```r
+sync_diff_glm <- glm(Sync ~ I(Distance^2)*I(Angle^2)*(Ablation+Flow+Darkness+Ablation:Flow+Darkness:Flow),
+                        data = comp_data_sync_model)
+
+summary(sync_diff_glm)
+```"

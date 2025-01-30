@@ -1,0 +1,59 @@
+"0","```r
+# speed_gam_d <- gam(Speed_Diff ~ s(Distance), data = comp_data_near_3)
+# speed_gam_d_f <- gam(Speed_Diff ~ s(Distance,by=Flow), data = comp_data_near_3)
+# speed_gam_d_a <- gam(Speed_Diff ~ s(Distance,by=Ablation), data = comp_data_near_3)
+# speed_gam_d_d <- gam(Speed_Diff ~ s(Distance,by=Darkness), data = comp_data_near_3)
+# speed_gam_d_fa <- gam(Speed_Diff ~ s(Distance,by=Flow_Ablation), data = comp_data_near_3)
+# speed_gam_d_fd <- gam(Speed_Diff ~ s(Distance,by=Flow_Darkness), data = comp_data_near_3)
+# speed_gam_d_fda <- gam(Speed_Diff ~ s(Distance,by=Flow_Ablation_Darkness), data = comp_data_near_3)
+# 
+# speed_gam_ca <- gam(Speed_Diff ~ s(cos_Angle), data = comp_data_near_3)
+# speed_gam_ca_f <- gam(Speed_Diff ~ s(cos_Angle,by=Flow), data = comp_data_near_3)
+# speed_gam_ca_a <- gam(Speed_Diff ~ s(cos_Angle,by=Ablation), data = comp_data_near_3)
+# speed_gam_ca_d <- gam(Speed_Diff ~ s(cos_Angle,by=Darkness), data = comp_data_near_3)
+# speed_gam_ca_fa <- gam(Speed_Diff ~ s(cos_Angle,by=Flow_Ablation), data = comp_data_near_3)
+# speed_gam_ca_fd <- gam(Speed_Diff ~ s(cos_Angle,by=Flow_Darkness), data = comp_data_near_3)
+# speed_gam_ca_fda <- gam(Speed_Diff ~ s(cos_Angle,by=Flow_Ablation_Darkness), data = comp_data_near_3)
+# 
+# speed_gam_sa <- gam(Speed_Diff ~ s(sin_Angle), data = comp_data_near_3)
+# speed_gam_sa_f <- gam(Speed_Diff ~ s(sin_Angle,by=Flow), data = comp_data_near_3)
+# speed_gam_sa_a <- gam(Speed_Diff ~ s(sin_Angle,by=Ablation), data = comp_data_near_3)
+# speed_gam_sa_d <- gam(Speed_Diff ~ s(sin_Angle,by=Darkness), data = comp_data_near_3)
+# speed_gam_sa_fa <- gam(Speed_Diff ~ s(sin_Angle,by=Flow_Ablation), data = comp_data_near_3)
+# speed_gam_sa_fd <- gam(Speed_Diff ~ s(sin_Angle,by=Flow_Darkness), data = comp_data_near_3)
+# speed_gam_sa_fda <- gam(Speed_Diff ~ s(sin_Angle,by=Flow_Ablation_Darkness), data = comp_data_near_3)
+# 
+# speed_gam_dca <- gam(Speed_Diff ~ s(Distance,cos_Angle), data = comp_data_near_3)
+# speed_gam_dca_f <- gam(Speed_Diff ~ s(Distance,cos_Angle,by=Flow), data = comp_data_near_3)
+# speed_gam_dca_a <- gam(Speed_Diff ~ s(Distance,cos_Angle,by=Ablation), data = comp_data_near_3)
+# speed_gam_dca_d <- gam(Speed_Diff ~ s(Distance,cos_Angle,by=Darkness), data = comp_data_near_3)
+# speed_gam_dca_fa <- gam(Speed_Diff ~ s(Distance,cos_Angle,by=Flow_Ablation), data = comp_data_near_3)
+# speed_gam_dca_fd <- gam(Speed_Diff ~ s(Distance,cos_Angle,by=Flow_Darkness), data = comp_data_near_3)
+# speed_gam_dca_fda <- gam(Speed_Diff ~ s(Distance,cos_Angle,by=Flow_Ablation_Darkness), data = comp_data_near_3)
+# 
+# speed_gam_dsa <- gam(Speed_Diff ~ s(Distance,sin_Angle), data = comp_data_near_3)
+# speed_gam_dsa_f <- gam(Speed_Diff ~ s(Distance,sin_Angle,by=Flow), data = comp_data_near_3)
+# speed_gam_dsa_a <- gam(Speed_Diff ~ s(Distance,sin_Angle,by=Ablation), data = comp_data_near_3)
+# speed_gam_dsa_d <- gam(Speed_Diff ~ s(Distance,sin_Angle,by=Darkness), data = comp_data_near_3)
+# speed_gam_dsa_fa <- gam(Speed_Diff ~ s(Distance,sin_Angle,by=Flow_Ablation), data = comp_data_near_3)
+# speed_gam_dsa_fd <- gam(Speed_Diff ~ s(Distance,sin_Angle,by=Flow_Darkness), data = comp_data_near_3)
+# speed_gam_dsa_fda <- gam(Speed_Diff ~ s(Distance,sin_Angle,by=Flow_Ablation_Darkness), data = comp_data_near_3)
+# 
+# speed_gam_dcasa <- gam(Speed_Diff ~ s(Distance,cos_Angle,sin_Angle), data = comp_data_near_3)
+# speed_gam_dcasa_f <- gam(Speed_Diff ~ s(Distance,cos_Angle,sin_Angle,by=Flow), data = comp_data_near_3)
+# speed_gam_dcasa_a <- gam(Speed_Diff ~ s(Distance,cos_Angle,sin_Angle,by=Ablation), data = comp_data_near_3)
+# speed_gam_dcasa_d <- gam(Speed_Diff ~ s(Distance,cos_Angle,sin_Angle,by=Darkness), data = comp_data_near_3)
+# speed_gam_dcasa_fa <- gam(Speed_Diff ~ s(Distance,cos_Angle,sin_Angle,by=Flow_Ablation), data = comp_data_near_3)
+# speed_gam_dcasa_fd <- gam(Speed_Diff ~ s(Distance,cos_Angle,sin_Angle,by=Flow_Darkness), data = comp_data_near_3)
+# speed_gam_dcasa_fda <- gam(Speed_Diff ~ s(Distance,cos_Angle,sin_Angle,by=Flow_Ablation_Darkness), data = comp_data_near_3)
+
+speed_AIC <- AIC(speed_gam_d,speed_gam_d_f,speed_gam_d_a,speed_gam_d_d,speed_gam_d_fa,speed_gam_d_fd,speed_gam_d_fda,
+                 speed_gam_ca,speed_gam_ca_f,speed_gam_ca_a,speed_gam_ca_d,speed_gam_ca_fa,speed_gam_ca_fd,speed_gam_ca_fda,
+                 speed_gam_sa,speed_gam_sa_f,speed_gam_sa_a,speed_gam_sa_d,speed_gam_sa_fa,speed_gam_sa_fd,speed_gam_sa_fda,
+                 speed_gam_dca,speed_gam_dca_f,speed_gam_dca_a,speed_gam_dca_d,speed_gam_dca_fa,speed_gam_dca_fd,speed_gam_dca_fda,
+                 speed_gam_dsa,speed_gam_dsa_f,speed_gam_dsa_a,speed_gam_dsa_d,speed_gam_dsa_fa,speed_gam_dsa_fd,speed_gam_dsa_fda,
+                 speed_gam_dcasa,speed_gam_dcasa_f,speed_gam_dcasa_a,speed_gam_dcasa_d,speed_gam_dcasa_fa,speed_gam_dcasa_fd,speed_gam_dcasa_fda)
+```"
+"1","Error in AIC(speed_gam_d, speed_gam_d_f, speed_gam_d_a, speed_gam_d_d,  : 
+  object 'speed_gam_d' not found
+"

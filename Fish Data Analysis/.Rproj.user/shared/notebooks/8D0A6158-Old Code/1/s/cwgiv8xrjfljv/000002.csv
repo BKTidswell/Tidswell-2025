@@ -1,0 +1,55 @@
+"0","```r
+set.seed(7)
+
+comp_data_sync_model <- comp_data %>% select(c(Flow,Darkness,Ablation,Angle,Distance,Sync))
+
+max_poly <- 10
+
+sync_dist_cv_error_10 <- rep(0,max_poly)
+sybc_dist_AIC_10 <- rep(0,max_poly)
+
+
+for (i in 1:max_poly){
+  sync_dist_fit <- glm(Sync ~ poly(Distance,i)*(Ablation+Flow+Darkness+Ablation:Flow+Darkness:Flow),
+                        data = comp_data_sync_model)
+  sync_dist_cv_error_10[i] <- cv.glm(comp_data_sync_model, sync_dist_fit, K = 10)$delta[1]
+  sybc_dist_AIC_10[i] <- AIC(sync_dist_fit)
+}
+
+sync_angle_cv_error_10 <- rep(0,max_poly)
+sync_angle_AIC_10 <- rep(0,max_poly)
+
+
+for (i in 1:max_poly){
+  sync_angle_fit <- glm(Sync ~ poly(Angle,i)*(Ablation+Flow+Darkness+Ablation:Flow+Darkness:Flow),
+                         data = comp_data_sync_model)
+  sync_angle_cv_error_10[i] <- cv.glm(comp_data_sync_model, sync_angle_fit, K = 10)$delta[1]
+  sync_angle_AIC_10[i] <- AIC(sync_angle_fit)
+}
+
+sync_poly_plot_df <- data.frame(c(seq(max_poly),seq(max_poly)),
+                                 c(speed_dist_cv_error_10,speed_angle_cv_error_10),
+                                 c(speed_dist_AIC_10,speed_angle_AIC_10),
+                                 c(rep(\"Distance\",max_poly),rep(\"Angle\",max_poly)))
+
+colnames(sync_poly_plot_df) <- c(\"Degree\",\"Error\",\"AIC\",\"Predictor\")
+
+sync_poly_plot_df <- sync_poly_plot_df %>% group_by(Predictor) %>%
+                                             mutate(minError = min(Error),minAIC = min(AIC)) %>%
+                                             ungroup() %>%
+                                             mutate(isMinEror = ifelse(Error == minError,3,1),isMinAIC = ifelse(AIC == minAIC,3,1))
+
+ggplot(sync_poly_plot_df, aes(x = Degree, y = Error, color = Predictor))+
+  geom_point(size = sync_poly_plot_df$isMinEror)+
+  geom_line()+
+  theme_light()+
+  facet_wrap(~ Predictor, scales = \"free\") +
+  scale_size(guide = \"none\")
+
+ggplot(sync_poly_plot_df, aes(x = Degree, y = AIC, color = Predictor))+
+  geom_point(size = sync_poly_plot_df$isMinAIC)+
+  geom_line()+
+  theme_light()+
+  facet_wrap(~ Predictor, scales = \"free\") +
+  scale_size(guide = \"none\")
+```"

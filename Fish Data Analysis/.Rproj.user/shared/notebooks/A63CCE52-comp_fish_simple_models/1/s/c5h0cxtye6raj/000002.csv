@@ -1,0 +1,69 @@
+"0","```r
+sync_gam_d <- gam(Sync ~ s(Distance), data = comp_data_near_3)
+sync_gam_d_f <- gam(Sync ~ s(Distance,by=Flow), data = comp_data_near_3)
+sync_gam_d_a <- gam(Sync ~ s(Distance,by=Ablation), data = comp_data_near_3)
+sync_gam_d_d <- gam(Sync ~ s(Distance,by=Darkness), data = comp_data_near_3)
+sync_gam_d_fa <- gam(Sync ~ s(Distance,by=Flow_Ablation), data = comp_data_near_3)
+sync_gam_d_fd <- gam(Sync ~ s(Distance,by=Flow_Darkness), data = comp_data_near_3)
+sync_gam_d_fda <- gam(Sync ~ s(Distance,by=Flow_Ablation_Darkness), data = comp_data_near_3)
+
+sync_gam_ca <- gam(Sync ~ s(cos_Angle), data = comp_data_near_3)
+sync_gam_ca_f <- gam(Sync ~ s(cos_Angle,by=Flow), data = comp_data_near_3)
+sync_gam_ca_a <- gam(Sync ~ s(cos_Angle,by=Ablation), data = comp_data_near_3)
+sync_gam_ca_d <- gam(Sync ~ s(cos_Angle,by=Darkness), data = comp_data_near_3)
+sync_gam_ca_fa <- gam(Sync ~ s(cos_Angle,by=Flow_Ablation), data = comp_data_near_3)
+sync_gam_ca_fd <- gam(Sync ~ s(cos_Angle,by=Flow_Darkness), data = comp_data_near_3)
+sync_gam_ca_fda <- gam(Sync ~ s(cos_Angle,by=Flow_Ablation_Darkness), data = comp_data_near_3)
+
+sync_gam_sa <- gam(Sync ~ s(sin_Angle), data = comp_data_near_3)
+sync_gam_sa_f <- gam(Sync ~ s(sin_Angle,by=Flow), data = comp_data_near_3)
+sync_gam_sa_a <- gam(Sync ~ s(sin_Angle,by=Ablation), data = comp_data_near_3)
+sync_gam_sa_d <- gam(Sync ~ s(sin_Angle,by=Darkness), data = comp_data_near_3)
+sync_gam_sa_fa <- gam(Sync ~ s(sin_Angle,by=Flow_Ablation), data = comp_data_near_3)
+sync_gam_sa_fd <- gam(Sync ~ s(sin_Angle,by=Flow_Darkness), data = comp_data_near_3)
+sync_gam_sa_fda <- gam(Sync ~ s(sin_Angle,by=Flow_Ablation_Darkness), data = comp_data_near_3)
+
+sync_gam_dca <- gam(Sync ~ s(Distance,cos_Angle), data = comp_data_near_3)
+sync_gam_dca_f <- gam(Sync ~ s(Distance,cos_Angle,by=Flow), data = comp_data_near_3)
+sync_gam_dca_a <- gam(Sync ~ s(Distance,cos_Angle,by=Ablation), data = comp_data_near_3)
+sync_gam_dca_d <- gam(Sync ~ s(Distance,cos_Angle,by=Darkness), data = comp_data_near_3)
+sync_gam_dca_fa <- gam(Sync ~ s(Distance,cos_Angle,by=Flow_Ablation), data = comp_data_near_3)
+sync_gam_dca_fd <- gam(Sync ~ s(Distance,cos_Angle,by=Flow_Darkness), data = comp_data_near_3)
+sync_gam_dca_fda <- gam(Sync ~ s(Distance,cos_Angle,by=Flow_Ablation_Darkness), data = comp_data_near_3)
+
+sync_gam_dsa <- gam(Sync ~ s(Distance,sin_Angle), data = comp_data_near_3)
+sync_gam_dsa_f <- gam(Sync ~ s(Distance,sin_Angle,by=Flow), data = comp_data_near_3)
+sync_gam_dsa_a <- gam(Sync ~ s(Distance,sin_Angle,by=Ablation), data = comp_data_near_3)
+sync_gam_dsa_d <- gam(Sync ~ s(Distance,sin_Angle,by=Darkness), data = comp_data_near_3)
+sync_gam_dsa_fa <- gam(Sync ~ s(Distance,sin_Angle,by=Flow_Ablation), data = comp_data_near_3)
+sync_gam_dsa_fd <- gam(Sync ~ s(Distance,sin_Angle,by=Flow_Darkness), data = comp_data_near_3)
+sync_gam_dsa_fda <- gam(Sync ~ s(Distance,sin_Angle,by=Flow_Ablation_Darkness), data = comp_data_near_3)
+
+sync_gam_dcasa <- gam(Sync ~ s(Distance,cos_Angle,sin_Angle), data = comp_data_near_3)
+sync_gam_dcasa_f <- gam(Sync ~ s(Distance,cos_Angle,sin_Angle,by=Flow), data = comp_data_near_3)
+sync_gam_dcasa_a <- gam(Sync ~ s(Distance,cos_Angle,sin_Angle,by=Ablation), data = comp_data_near_3)
+sync_gam_dcasa_d <- gam(Sync ~ s(Distance,cos_Angle,sin_Angle,by=Darkness), data = comp_data_near_3)
+sync_gam_dcasa_fa <- gam(Sync ~ s(Distance,cos_Angle,sin_Angle,by=Flow_Ablation), data = comp_data_near_3)
+sync_gam_dcasa_fd <- gam(Sync ~ s(Distance,cos_Angle,sin_Angle,by=Flow_Darkness), data = comp_data_near_3)
+sync_gam_dcasa_fda <- gam(Sync ~ s(Distance,cos_Angle,sin_Angle,by=Flow_Ablation_Darkness), data = comp_data_near_3)
+
+Sync_AIC <- AIC(sync_gam_d,sync_gam_d_f,sync_gam_d_a,sync_gam_d_d,sync_gam_d_fa,sync_gam_d_fd,sync_gam_d_fda,
+                 sync_gam_ca,sync_gam_ca_f,sync_gam_ca_a,sync_gam_ca_d,sync_gam_ca_fa,sync_gam_ca_fd,sync_gam_ca_fda,
+                 sync_gam_sa,sync_gam_sa_f,sync_gam_sa_a,sync_gam_sa_d,sync_gam_sa_fa,sync_gam_sa_fd,sync_gam_sa_fda,
+                 sync_gam_dca,sync_gam_dca_f,sync_gam_dca_a,sync_gam_dca_d,sync_gam_dca_fa,sync_gam_dca_fd,sync_gam_dca_fda,
+                 sync_gam_dsa,sync_gam_dsa_f,sync_gam_dsa_a,sync_gam_dsa_d,sync_gam_dsa_fa,sync_gam_dsa_fd,sync_gam_dsa_fda,
+                 sync_gam_dcasa,sync_gam_dcasa_f,sync_gam_dcasa_a,sync_gam_dcasa_d,sync_gam_dcasa_fa,sync_gam_dcasa_fd,sync_gam_dcasa_fda)
+
+
+Sync_AIC <- tibble::rownames_to_column(Sync_AIC, \"Model_Name\")
+
+Sync_AIC <- Sync_AIC %>% mutate(Model_Name = fct_reorder(Model_Name, -AIC)) %>% arrange(AIC)
+
+ggplot(Sync_AIC %>% arrange(AIC), aes(x = Model_Name, y = AIC)) +
+  geom_point(color = \"blue\") +
+  xlab(\"\") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  theme_light()+
+  scale_y_reverse() +
+  coord_flip()
+```"

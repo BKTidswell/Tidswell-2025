@@ -1,0 +1,12 @@
+"0","school_stats_mega_plot <- ggarrange(nnd_still, "
+"0","                                    polar_still,"
+"0","                                    speed_still,"
+"0","          labels = c(""A"", ""B"", ""C"", ""D""),"
+"0","          ncol = 1, nrow = 3)  "
+"2","Warning:"
+"2"," [38;5;232mRemoved 6 rows containing missing values or values outside the scale range (`stat_slabinterval()`).[39m
+"
+"2","Warning:"
+"2"," [38;5;232mRemoved 10 rows containing missing values or values outside the scale range (`stat_slabinterval()`).[39m
+"
+"0","school_stats_mega_plot"

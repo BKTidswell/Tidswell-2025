@@ -1,0 +1,7 @@
+"0","```r
+ggplot(sync_pred, aes(x = Distance, y = Sync))+
+  geom_smooth()+
+  scale_fill_viridis() +
+  facet_wrap(~ Flow + Ablation + Darkness) +
+  theme_light()
+```"

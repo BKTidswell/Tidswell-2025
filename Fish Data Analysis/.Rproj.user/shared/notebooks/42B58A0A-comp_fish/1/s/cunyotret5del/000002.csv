@@ -1,0 +1,28 @@
+"0","```r
+#Dataframe for Predictions
+
+d <- seq(from = 0, to = 2, by = 0.1)
+a <- seq(from = 0, to = 180, by = 10)
+
+x <- seq(from = -sqrt(2), to = sqrt(2), by = 0.1)
+y <- seq(from = 0, to = sqrt(2), by = 0.1)
+
+flows <- c(\"Flow 0\", \"Flow 2\")
+ablation <- c(\"No Ablation\", \"Ablated\")
+dark <- c(\"Light\",\"Dark\")
+
+#predict_df <- expand.grid(Distance = d, Angle = a, Flow = flows, Ablation = ablation, Darkness = dark)
+#predict_df <- predict_df %>% mutate(X_Distance = Distance*(cos(deg2rad(Angle))), Y_Distance = Distance*(sin(deg2rad(Angle))))
+
+predict_df <- expand.grid(X_Distance = x, Y_Distance = y, Flow = flows, Ablation = ablation, Darkness = dark)
+predict_df <- predict_df %>% mutate(Distance = sqrt(X_Distance**2 + Y_Distance**2), Angle = rad2deg(atan(Y_Distance/X_Distance)))
+
+predict_df <- predict_df %>% filter(!(Ablation == \"Ablated\" & Darkness == 'Dark'))
+predict_df <- na.omit(predict_df)
+
+ggplot(predict_df, aes(x = X_Distance, y = Y_Distance))+
+  geom_point()+
+  scale_fill_viridis() +
+  facet_wrap(~ Flow + Ablation + Darkness) +
+  theme_light()
+```"

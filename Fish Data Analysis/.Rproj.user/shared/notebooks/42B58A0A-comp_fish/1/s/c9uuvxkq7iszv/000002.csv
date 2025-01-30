@@ -1,0 +1,26 @@
+"0","```r
+comp_data <- read.csv(\"Fish_Comp_Values.csv\")
+comp_data <- na.omit(comp_data)
+
+comp_data <- comp_data %>% mutate(Flow = ifelse(Flow == \"0\", \"Flow 0\", \"Flow 2\")) %>%
+                           mutate(Ablation = ifelse(Ablation == \"N\", \"No Ablation\", \"Ablated\")) %>%
+                           mutate(Darkness = ifelse(Darkness == \"N\", \"Light\", \"Dark\")) %>%
+                           mutate(Speed_Diff = abs(Speed_Diff)) %>%
+                           mutate(Heading_Diff = abs(Heading_Diff)) %>%
+                           filter(Speed_Diff <= 6) %>% 
+                           mutate(quarter_heading_diff = abs(abs(Heading_Diff-90)-90)) %>%
+                           mutate(Is_Aligned = ifelse(Heading_Diff < 30, 1, 0)) %>%
+                           mutate(Is_Reversed = ifelse(Heading_Diff > 150, 1, 0))
+
+sum_comp_data <- comp_data %>% mutate(X_Distance = round_any(X_Distance,0.25), 
+                                      Y_Distance = round_any(abs(Y_Distance),0.25)) %>%
+                               group_by(Flow,Ablation,Darkness,X_Distance,Y_Distance) %>%
+                               summarise(Speed_Diff = mean(Speed_Diff),
+                                         Heading_Diff = ang_mean(Heading_Diff),
+                                         Sync = mean(Sync),
+                                         Quarter_Heading_Diff = mean(quarter_heading_diff),
+                                         Is_Aligned = mean(Is_Aligned),
+                                         Is_Reversed = mean(Is_Reversed))
+```"
+"1","`summarise()` has grouped output by 'Flow', 'Ablation', 'Darkness', 'X_Distance'. You can override using the `.groups` argument.
+"

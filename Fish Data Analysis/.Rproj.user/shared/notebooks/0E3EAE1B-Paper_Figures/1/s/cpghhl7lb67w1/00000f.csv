@@ -1,0 +1,18 @@
+"0","turning_mega_plot <- ggarrange(eight_fish_still, eight_fish_flow,ggplot() + theme_classic() + theme(axis.line=element_blank()),
+          light_eight_and_single_graph, ablation_eight_and_single_graph, dark_eight_and_single_graph,
+          labels = c(""A"", ""B"", """", ""C"", ""D"", ""E""),
+          ncol = 3, nrow = 2)
+"
+"2","Warning: non-integer #successes in a binomial glm!"
+"2","Warning: non-integer #successes in a binomial glm!"
+"2","Warning: non-integer #successes in a binomial glm!"
+"2","Warning: non-integer #successes in a binomial glm!"
+"2","Warning: non-integer #successes in a binomial glm!"
+"2","Warning: non-integer #successes in a binomial glm!"
+"2","Warning: non-integer #successes in a binomial glm!"
+"2","Warning: non-integer #successes in a binomial glm!"
+"2","Warning: non-integer #successes in a binomial glm!"
+"2","Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred"
+"2","Warning: non-integer #successes in a binomial glm!"
+"2","Warning: non-integer #successes in a binomial glm!"
+"2","Warning: non-integer #successes in a binomial glm!"

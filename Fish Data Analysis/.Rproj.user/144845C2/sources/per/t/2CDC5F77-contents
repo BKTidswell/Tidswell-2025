@@ -1,0 +1,348 @@
+---
+title: "Results Text"
+format: html
+editor: visual
+---
+
+## Loading in the Libraries for Everything
+
+```{r}
+library(marginaleffects)
+library(tidyverse)
+library(ggplot2)
+library(bbmle) #For ICtab
+library(car)
+library(ggpubr)
+library(ggdist)
+library(emmeans)
+library(lme4)
+library(sjPlot)
+library(multcompView)
+library(lmtest)
+
+```
+
+## Functions and Variables
+
+```{r}
+rad2deg <- function(rad) {(rad * 180) / (pi)}
+deg2rad <- function(deg) {(deg * pi) / (180)}
+round_any <- function(x, accuracy, f=round){f(x/ accuracy) * accuracy}
+
+deg_ang_mean <- function(x){rad2deg(atan2(mean(sin(deg2rad(x))),mean(cos(deg2rad(x)))))}
+rad_ang_mean <- function(x){atan2(mean(sin(x)),mean(cos(x)))}
+
+fold_angle_0_360_to_0_180 <- function(x){abs(abs(x-180)-180)}
+
+fold_angle_neg_180_180_to_neg_90_90 <- function(x){ifelse(x > 90,90-abs(90-x),ifelse(x < -90, -90+abs(-90-x), x))}
+
+min_n <- function(x,n){sort(x)[1:n]}
+max_n <- function(x,n){sort(x,decreasing = TRUE)[1:n]}
+
+light_no_ab_color = "#9C9C9C"   #"#C62E65" #A1BAA4" #"#d4d7dd" 06D6A0
+light_ab_color = "#f5ba9e"
+dark_no_ab_color = "#5e94d4"
+dark_ab_color = "#49A078"   #"#1E4371"
+sim_color = "#777777"
+
+flow_split_still = "#F59DE2"
+flow_split_flow = "#5DD492"
+
+dark_split_light = "#5e94d4"
+dark_split_dark = "#011627"
+
+tailbeat_len = 19
+
+allowed_flow_type = c("Still Water","Flowing Water (2 BL/s)")
+
+dot_binwidth = 0.03
+
+text_size = 16
+
+# for turning data
+x_offset <- 1.95
+y_offset <- 1.15
+
+#constrast names
+
+contrast_names <- c("LNCB-LYCB","LNCB-LNGD","LNCB-LYGD","LNCB-LNNT","LNCB-LYNT",
+                   "LYCB-LNGD","LYCB-LYGD","LYCB-LNNT","LYCB-LYNT",
+                   "LNGD-LYGD","LNGD-LNNT","LNGD-LYNT",
+                   "LYGD-LNNT","LYGD-LYNT",
+                   "LNNT-LYNT")
+```
+
+```{r}
+
+all_fish_comp <- rbind(read.csv("Data/Fish_Comp_Values_3D_Giant Danio.csv"),
+                       read.csv("Data/Fish_Comp_Values_3D_Cherry Barb.csv"),
+                       read.csv("Data/Fish_Comp_Values_3D_Neon Tetra.csv"))
+
+write.csv(all_fish_comp,"Data/Fish_Comp_Values_3D.csv")
+
+all_fish_comp <- rbind(read.csv("Data/Fish_School_Values_3D_Giant Danio.csv"),
+                       read.csv("Data/Fish_School_Values_3D_Cherry Barb.csv"),
+                       read.csv("Data/Fish_School_Values_3D_Neon Tetra.csv"))
+
+write.csv(all_fish_comp,"Data/Fish_School_Values_3D.csv")
+
+all_fish_comp <- rbind(read.csv("Data/Fish_Raw_Points_3D_Giant Danio.csv"),
+                       read.csv("Data/Fish_Raw_Points_3D_Cherry Barb.csv"),
+                       read.csv("Data/Fish_Raw_Points_3D_Neon Tetra.csv"))
+
+write.csv(all_fish_comp,"Data/Fish_Raw_Points_3D.csv")
+
+```
+
+## School Summary Stats
+
+```{r}
+school_data <- read.csv("Data/Fish_School_Values_3D.csv")
+school_data <- na.omit(school_data)
+
+school_data <- school_data %>% mutate(Flow = ifelse(Flow == "0", "Still Water", "Flowing Water (2 BL/s)")) %>%
+                           mutate(Ablation = ifelse(Ablation == "N", "No Ablation", "Ablated")) %>%
+                           mutate(Darkness = ifelse(Darkness == "N", "Light", "Dark")) %>%
+                           filter(School_Speed <= 5) %>%
+                           mutate(Flow = factor(Flow), Ablation = factor(Ablation), Darkness = factor(Darkness)) %>%
+                           mutate(Ablation = fct_relevel(Ablation, c("No Ablation","Ablated"))) %>%
+                           mutate(Ablation_Species = factor(paste(Ablation,Species,sep="/n"))) %>%
+                           mutate(Species = fct_relevel(Species, c("Giant Danio","Cherry Barb", "Neon Tetra"))) %>%
+                            
+                           # ### Used to remove every third point to reduce autocorrelation
+                           mutate(Date = paste(Year,Month,Day,sep="_"),
+                                  Date_Trial = paste(Year,Month,Day,Trial,sep="_")) %>%
+                           group_by(Date_Trial) %>%
+                           filter(row_number() %% 3 == 1) %>%
+                           ungroup()
+
+all_fish_comp <- read.csv("Data/Fish_Raw_Points_3D.csv") %>% mutate(Flow = ifelse(Flow == "0", "Still Water", "Flowing Water (2 BL/s)")) %>%
+                           mutate(Ablation = ifelse(Ablation == "N", "No Ablation", "Ablated")) %>%
+                           mutate(Ablation = fct_relevel(Ablation, c("No Ablation","Ablated"))) %>%
+                           mutate(Species = fct_relevel(Species, c("Giant Danio","Cherry Barb", "Neon Tetra"))) %>%
+                           mutate(Ablation_Species = factor(paste(Ablation,Species,sep="/n")))
+
+#Uncomment with new data, takes a long time to run just for graph edits
+# all_fish_comp_groups <- all_fish_comp %>% expand_grid(Group_Dist = seq(5,25,1)) %>%
+#                                           group_by(Species, Ablation, Ablation_Species,
+#                                                    Year, Month, Day, Trial, Tailbeat, Frame, Group_Dist) %>%
+#                                           summarize(n_groups = get_n_groups(Head_X,Head_Y,Head_Z,Group_Dist)) %>%
+#                                           ungroup() %>%
+#                                           group_by(Species, Ablation, Ablation_Species,
+#                                                    Year, Month, Day, Trial, Tailbeat, Group_Dist) %>%
+#                                           summarize(Groups = as.integer(mean(n_groups, na.rm = TRUE))) %>%
+#                                           ungroup() %>%
+# 
+#                                            # ### Used to remove every third point to reduce autocorrelation
+#                                            filter(Tailbeat %% 3 == 1) %>%
+#                                           na.omit()
+# saveRDS(all_fish_comp_groups, "all_fish_comp_groups.RDS")
+
+all_fish_comp_groups <- readRDS("all_fish_comp_groups.RDS")
+
+
+group_sum_data <- all_fish_comp_groups %>% filter(Groups > 0) %>% group_by(Ablation, Species, Groups, Group_Dist) %>%
+                            summarise(count = n()) %>%
+                            ungroup() %>%
+                            mutate(Groups = as.factor(Groups),
+                                   Groups = fct_rev(Groups))
+
+group_sum_data_1 <- group_sum_data %>% complete(Species,Ablation,Group_Dist,Groups,fill=list(count=0)) %>%
+                                       group_by(Species,Ablation,Group_Dist) %>%
+                                       mutate(total = sum(count),
+                                              Percent_Group = count / total) %>%
+                                       ungroup() %>%
+                                       filter(Groups == 1)
+
+group_sum_data_1_binom <- all_fish_comp_groups %>% mutate(Is_One = ifelse(Groups == 1, 1, 0))
+```
+
+
+
+
+### School Stats Table Here
+
+```{r}
+
+nnd_lmer_still <- lm(NND ~ Ablation*Species + Trial, data = school_data)
+nnd_s_aov_me <- Anova(nnd_lmer_still, type=c("III"))
+em_out <- summary(emmeans(nnd_lmer_still, pairwise ~ Ablation*Species))$contrasts$p.value
+names(em_out) <- contrast_names
+multcompLetters(em_out)
+
+plot(nnd_lmer_still)
+qqnorm(resid(nnd_lmer_still))
+qqline(resid(nnd_lmer_still))
+
+ggplot(school_data, aes(Trial, NND, color = interaction(Ablation,Species)))+
+  geom_point()+
+  geom_line(aes(y = predict(nnd_lmer_still)))+
+  theme_classic()
+
+polar_lmer_still <- lm(School_Polar ~ Ablation*Species + Trial, data = school_data)
+polar_s_aov_me <- Anova(polar_lmer_still, type=c("III"))
+em_out <- summary(emmeans(polar_lmer_still, pairwise ~ Ablation*Species))$contrasts$p.value
+names(em_out) <- contrast_names
+multcompLetters(em_out)
+
+plot(polar_lmer_still)
+qqnorm(resid(polar_lmer_still))
+qqline(resid(polar_lmer_still))
+
+speed_lmer_still <- lm(School_Speed ~ Ablation*Species + Trial, data = school_data)
+speed_s_aov_me <- Anova(speed_lmer_still, type=c("III"))
+em_out <- summary(emmeans(speed_lmer_still, pairwise ~ Ablation*Species))$contrasts$p.value
+names(em_out) <- contrast_names
+multcompLetters(em_out)
+
+plot(speed_lmer_still)
+qqnorm(resid(speed_lmer_still))
+qqline(resid(speed_lmer_still))
+
+group_1_glm <- glm(Is_One ~ Ablation*Species*Group_Dist+Trial, data = group_sum_data_1_binom, family = "binomial")
+group_1_aov <- Anova(group_1_glm, type=c("III"))
+emmeans(group_1_glm, pairwise ~ Ablation*Species | Group_Dist)
+em_out <- summary(emmeans(group_1_glm, pairwise ~ Ablation*Species | Group_Dist))$contrasts$p.value
+names(em_out) <- contrast_names
+multcompLetters(em_out)
+
+values_to_grab <- c(2,3,4,5)
+values_to_grab_groups <- c(1,2,3,4,5,6,7,8)
+
+glmm_school_stats_table <- tibble(Stat = c(rep("NND",4),rep("Polarization",4),rep("Speed",4),rep("Groups",8)),
+       Condition = c(rep(c("Ablation","Species","Trial","Ablation x Species"), 3),
+                     c("Ablation","Species","Trial","Group Distance",
+                       "Ablation x Species","Ablation x Group Distance","Species x Group Distance",
+                       "Ablation x Species x Group Distance")),
+       DF = c(rep(c(rep(length(nnd_lmer_still$model$NND)-3,4)),times = 3),rep(length(nnd_lmer_still$model$NND)-3,8)),
+       Chisq = round(c(nnd_s_aov_me$`F value`[values_to_grab],
+                 polar_s_aov_me$`F value`[values_to_grab],
+                 speed_s_aov_me$`F value`[values_to_grab],
+                 group_1_aov$`LR Chisq`[values_to_grab_groups]),2),
+       
+       P_Val = round(c(nnd_s_aov_me$`Pr(>F)`[values_to_grab],
+                 polar_s_aov_me$`Pr(>F)`[values_to_grab],
+                 speed_s_aov_me$`Pr(>F)`[values_to_grab],
+                 group_1_aov$`Pr(>Chisq)`[values_to_grab_groups]),3),
+       
+       Is_Sig = P_Val < 0.05)
+
+glmm_school_stats_table
+
+saveRDS(glmm_school_stats_table,"Paper Tables/school_stats_table.RDS")
+```
+
+#### Within species comparison of ablation
+
+```{r}
+
+within_species_difference <- function(resp_var,base_formula, df, species){
+  no_ab_form <- paste0(resp_var," ~ ",base_formula)
+  ab_form <- paste0(resp_var," ~ Ablation+",base_formula)
+  
+  group_1_no_ab <- lm(formula(no_ab_form), data = df %>% filter(Species == species))
+  group_1_yes_ab <- lm(formula(ab_form), data = df %>% filter(Species == species))
+  
+  best_model <- rownames(AIC(group_1_yes_ab,group_1_no_ab) %>% arrange(AIC))[1]
+  chi <- lrtest(group_1_yes_ab,group_1_no_ab)$Chisq[2]
+  p_val <- lrtest(group_1_yes_ab,group_1_no_ab)$"Pr(>Chisq)"[2]
+  
+  return(tibble(ChiSqr = chi, PVal = p_val))
+}
+
+within_species_difference_binom <- function(resp_var,base_formula, df, species){
+  no_ab_form <- paste0(resp_var," ~ Group_Dist+",base_formula)
+  ab_form <- paste0(resp_var," ~ Ablation*Group_Dist+",base_formula)
+  
+  group_1_no_ab <- glm(formula(no_ab_form), data = df %>% filter(Species == species), family = "binomial")
+  group_1_yes_ab <- glm(formula(ab_form), data = df %>% filter(Species == species), family = "binomial")
+  
+  best_model <- rownames(AIC(group_1_yes_ab,group_1_no_ab) %>% arrange(AIC))[1]
+  chi <- lrtest(group_1_yes_ab,group_1_no_ab)$Chisq[2]
+  p_val <- lrtest(group_1_yes_ab,group_1_no_ab)$"Pr(>Chisq)"[2]
+  
+  return(tibble(ChiSqr = chi, PVal = p_val))
+}
+
+nnd_contrasts <- rbind(within_species_difference("NND","Trial",school_data,"Giant Danio"),
+                   within_species_difference("NND","Trial",school_data,"Cherry Barb"),
+                   within_species_difference("NND","Trial",school_data,"Neon Tetra"))
+
+polar_contrasts <- rbind(within_species_difference("School_Polar","Trial",school_data,"Giant Danio"),
+                     within_species_difference("School_Polar","Trial",school_data,"Cherry Barb"),
+                     within_species_difference("School_Polar","Trial",school_data,"Neon Tetra"))
+
+speed_contrasts <- rbind(within_species_difference("School_Speed","Trial",school_data,"Giant Danio"),
+                     within_species_difference("School_Speed","Trial",school_data,"Cherry Barb"),
+                     within_species_difference("School_Speed","Trial",school_data,"Neon Tetra"))
+
+groups_contrasts <- rbind(within_species_difference("Is_One","Trial",group_sum_data_1_binom,"Giant Danio"),
+                          within_species_difference("Is_One","Trial",group_sum_data_1_binom,"Cherry Barb"),
+                          within_species_difference("Is_One","Trial",group_sum_data_1_binom,"Neon Tetra"))
+
+school_ablation_stats_table <- tibble(Stat = c(rep("NND",3),rep("Polarization",3),rep("Speed",3),rep("Groups",3)),
+       Species = rep(c("Giant Danio","Cherry Barb","Neon Tetra"), 4),
+       X2 = round(c(nnd_contrasts$ChiSqr,polar_contrasts$ChiSqr,
+                 speed_contrasts$ChiSqr,groups_contrasts$ChiSqr),2),
+       P_Val = round(p.adjust(c(nnd_contrasts$PVal,polar_contrasts$PVal,
+                 speed_contrasts$PVal,groups_contrasts$PVal), method = "holm"),3),
+       Is_Sig = P_Val < 0.05)
+
+school_ablation_stats_table
+
+saveRDS(school_ablation_stats_table,"Paper Tables/species_comp_table.RDS")
+
+```
+
+
+### Neuromast Density
+
+```{r}
+
+neuromast_counts <- read.csv("Data/neuromast_counts.csv") %>%
+                    select(-c(x,y,survey.id)) %>%
+                    separate(image, c("Fish","ID"), sep = "_") %>%
+                    mutate(Fish = case_when(Fish == "GD" ~ "Giant Danio",
+                                            Fish == "CB" ~ "Cherry Barb",
+                                            Fish == "NT" ~ "Neon Tetra")) %>%
+                    mutate(ID = gsub(".jpg", "", ID),
+                           All.Superficial = Superficial.Above.LL+Superficial.Below.LL+Superficial.Head+
+                                             Superficial.LL.Scales+Superficial.Operculum+Superficial.Tailfin,
+                           All.Superficial.Area = All.Superficial/Area,
+                           Canal.Neuromast.Area = Canal.Neuromast/Area,
+                           Head.Superficial.Area = (Superficial.Head+Superficial.Operculum)/Area,
+                           Body.Superficial.Area = (Superficial.Above.LL+Superficial.Below.LL+
+                                                      Superficial.LL.Scales++Superficial.Tailfin)/Area)
+    
+```
+
+
+```{r}
+
+neuromast_per_area <- neuromast_counts %>% group_by(Fish) %>%
+                                          summarise(All.Superficial.Area = All.Superficial.Area,
+                                                    All.Superficial.Area.Mean = mean(All.Superficial.Area),
+                                                    All.Superficial.Area.SD = sd(All.Superficial.Area),
+                                                    Canal.Neuromast.Area = Canal.Neuromast.Area,
+                                                    Canal.Neuromast.Area.Mean = mean(Canal.Neuromast.Area),
+                                                    Canal.Neuromast.Area.SD = sd(Canal.Neuromast.Area),
+                                                    Head.Superficial.Area = Head.Superficial.Area,
+                                                    Head.Superficial.Area.Mean = mean(Head.Superficial.Area),
+                                                    Head.Superficial.Area.SD = sd(Head.Superficial.Area),
+                                                    Body.Superficial.Area = Body.Superficial.Area,
+                                                    Body.Superficial.Area.Mean = mean(Body.Superficial.Area),
+                                                    Body.Superficial.Area.SD = sd(Body.Superficial.Area))
+
+superfical_aov <- aov(All.Superficial.Area ~ Fish, data = neuromast_counts)
+superfical_tukey <- TukeyHSD(superfical_aov)
+
+canal_aov <- aov(Canal.Neuromast.Area ~ Fish, data = neuromast_counts)
+canal_tukey <- TukeyHSD(canal_aov)
+
+head_superficial_aov <- aov(Head.Superficial.Area ~ Fish, data = neuromast_counts)
+head_superficial_tukey <- TukeyHSD(head_superficial_aov)
+
+body_superficial_aov <- aov(Body.Superficial.Area ~ Fish, data = neuromast_counts)
+body_superficial_tukey <- TukeyHSD(body_superficial_aov)
+
+```

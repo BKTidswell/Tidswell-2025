@@ -1,0 +1,440 @@
+---
+title: "Testing"
+format: html
+editor: visual
+---
+
+## For Use in Testing New Graphs
+
+## Loading in the Libraries for Everything
+
+```{r}
+
+library(MASS)
+library(tidyverse)
+library(ggplot2)
+library(bbmle) #For ICtab
+library(car)
+library(ggpubr)
+library(ggdist)
+library(emmeans)
+library(lme4)
+
+
+```
+
+
+## Functions and Variables
+
+```{r}
+rad2deg <- function(rad) {(rad * 180) / (pi)}
+deg2rad <- function(deg) {(deg * pi) / (180)}
+round_any <- function(x, accuracy, f=round){f(x/ accuracy) * accuracy}
+
+deg_ang_mean <- function(x){rad2deg(atan2(mean(sin(deg2rad(x))),mean(cos(deg2rad(x)))))}
+rad_ang_mean <- function(x){atan2(mean(sin(x)),mean(cos(x)))}
+
+fold_angle_0_360_to_0_180 <- function(x){abs(abs(x-180)-180)}
+
+fold_angle_neg_180_180_to_neg_90_90 <- function(x){ifelse(x > 90,90-abs(90-x),ifelse(x < -90, -90+abs(-90-x), x))}
+
+min_n <- function(x,n){sort(x)[1:n]}
+max_n <- function(x,n){sort(x,decreasing = TRUE)[1:n]}
+
+light_no_ab_color = "#9C9C9C"   #"#C62E65" #A1BAA4" #"#d4d7dd" 06D6A0
+light_ab_color = "#f5ba9e"
+dark_no_ab_color = "#5e94d4"
+dark_ab_color = "#49A078"   #"#1E4371"
+sim_color = "#777777"
+
+flow_split_still = "#F59DE2"
+flow_split_flow = "#5DD492"
+
+dark_split_light = "#5e94d4"
+dark_split_dark = "#011627"
+
+tailbeat_len = 19
+
+allowed_flow_type = c("Still Water","Flowing Water (2 BL/s)")
+
+dot_binwidth = 0.02
+
+text_size = 16
+sig_text_size = 6
+
+# for turning data
+x_offset <- 1.95
+y_offset <- 1.15
+```
+
+## School Summary Stats
+
+```{r}
+school_data <- read.csv("Data/Fish_School_Values_3D.csv")
+
+#school_data <- na.omit(school_data)
+
+school_data <- school_data %>% mutate(Flow = ifelse(Flow == "0", "Still Water", "Flowing Water (2 BL/s)")) %>%
+                           mutate(Ablation = ifelse(Ablation == "N", "No Ablation", "Ablated")) %>%
+                           mutate(Darkness = ifelse(Darkness == "N", "Light", "Dark")) %>%
+                           filter(School_Speed <= 5) %>%
+                           mutate(Flow = factor(Flow), Ablation = factor(Ablation), Darkness = factor(Darkness)) %>%
+                           mutate(Ablation = fct_relevel(Ablation, c("No Ablation","Ablated"))) %>%
+                           mutate(Ablation_Species = factor(paste(Ablation,Species,sep="/n"))) %>%
+                            
+                           # ### Used to remove every third point to reduce autocorrelation
+                           mutate(Date = paste(Year,Month,Day,sep="_"),
+                                  Date_Trial = paste(Year,Month,Day,Trial,sep="_")) %>%
+                           group_by(Date_Trial) %>%
+                           filter(row_number() %% 3 == 1) %>%
+                           ungroup() %>%
+                           # ###
+                          
+                           group_by(Ablation_Species) %>%
+                           mutate(NND_Mean_Val = mean(NND,na.rm = T), NND_SD_Val = sd(NND,na.rm = T),
+                                  Polar_Mean_Val = mean(School_Polar,na.rm = T), Polar_SD_Val = sd(School_Polar,na.rm = T),
+                                  Speed_Mean_Val = mean(School_Speed,na.rm = T), Speed_SD_Val = sd(School_Speed,na.rm = T),
+                                  Groups_Mean_Val = mean(Groups,na.rm = T), Groups_SD_Val = sd(Groups,na.rm = T),
+                                  Mean_Groups_Mean_Val = mean(Mean_Groups,na.rm = T), Mean_Groups_SD_Val = sd(Mean_Groups,na.rm = T),
+                                  Tailbeat_Freq_Mean_Val = mean(Tailbeat_Freq,na.rm = T), Tailbeat_Freq_SD_Val = sd(Tailbeat_Freq,na.rm = T)) %>%
+                           ungroup()
+```
+
+Speed vs polarization
+
+```{r}
+
+ggplot(school_data, aes(School_Speed, School_Polar, color = Species))+
+  facet_wrap(~ Ablation)+
+  geom_point()+
+  geom_smooth(method = "lm", se = F)+
+  theme_classic()
+
+ggplot(school_data, aes(School_Speed, NND, color = Ablation))+
+  facet_wrap(~ Species)+
+  geom_point()+
+  geom_smooth(method = "lm", se = T)+
+  theme_classic()
+
+```
+
+
+```{r}
+
+neuromast_counts <- read.csv("Data/neuromast_counts.csv") %>%
+                    select(-c(x,y,survey.id)) %>%
+                    separate(image, c("Fish","ID"), sep = "_") %>%
+                    mutate(ID = gsub(".jpg", "", ID),
+                           All.Superficial = Superficial.Above.LL+Superficial.Below.LL+Superficial.Head+
+                                             Superficial.LL.Scales+Superficial.Operculum+Superficial.Tailfin,
+                           All.Superficial.Area = All.Superficial/Area,
+                           Canal.Neuromast.Area = Canal.Neuromast/Area,
+                           Head.Superficial.Area = (Superficial.Head+Superficial.Operculum)/Area,
+                           Body.Superficial.Area = (Superficial.Above.LL+Superficial.Below.LL+
+                                                      Superficial.LL.Scales++Superficial.Tailfin)/Area)
+    
+```
+
+
+```{r}
+
+neuromast_per_area <- neuromast_counts %>% group_by(Fish) %>%
+                                          summarise(All.Superficial.Area = All.Superficial.Area,
+                                                    All.Superficial.Area.Mean = mean(All.Superficial.Area),
+                                                    All.Superficial.Area.SD = sd(All.Superficial.Area),
+                                                    Canal.Neuromast.Area = Canal.Neuromast.Area,
+                                                    Canal.Neuromast.Area.Mean = mean(Canal.Neuromast.Area),
+                                                    Canal.Neuromast.Area.SD = sd(Canal.Neuromast.Area),
+                                                    Head.Superficial.Area = Head.Superficial.Area,
+                                                    Head.Superficial.Area.Mean = mean(Head.Superficial.Area),
+                                                    Head.Superficial.Area.SD = sd(Head.Superficial.Area),
+                                                    Body.Superficial.Area = Body.Superficial.Area,
+                                                    Body.Superficial.Area.Mean = mean(Body.Superficial.Area),
+                                                    Body.Superficial.Area.SD = sd(Body.Superficial.Area))
+
+
+ggplot(neuromast_per_area, aes(x = Fish, y = All.Superficial.Area, color = Fish))+
+  geom_point()+
+  geom_point(aes(y = All.Superficial.Area.Mean), color = "black")+
+  geom_errorbar(aes(ymin=All.Superficial.Area.Mean-All.Superficial.Area.SD,
+                    ymax=All.Superficial.Area.Mean+All.Superficial.Area.SD), width=.2, color = "black")+
+  ylab("Superficial Neuromasts per cm^2")+
+  theme_classic()
+
+superfical_aov <- aov(All.Superficial.Area ~ Fish, data = neuromast_counts)
+summary(superfical_aov)
+TukeyHSD(superfical_aov)
+
+ggplot(neuromast_per_area, aes(x = Fish, y = Canal.Neuromast.Area, color = Fish))+
+  geom_point()+
+  geom_point(aes(y = Canal.Neuromast.Area.Mean), color = "black")+
+  geom_errorbar(aes(ymin=Canal.Neuromast.Area.Mean-Canal.Neuromast.Area.SD,
+                    ymax=Canal.Neuromast.Area.Mean+Canal.Neuromast.Area.SD), width=.2, color = "black")+
+  ylab("Canal Neuromasts per cm^2")+
+  theme_classic()
+
+canal_aov <- aov(Canal.Neuromast.Area ~ Fish, data = neuromast_counts)
+summary(canal_aov)
+TukeyHSD(canal_aov)
+
+ggplot(neuromast_per_area, aes(x = Fish, y = Head.Superficial.Area, color = Fish))+
+  geom_point()+
+  geom_point(aes(y = Head.Superficial.Area.Mean), color = "black")+
+  geom_errorbar(aes(ymin=Head.Superficial.Area.Mean-Head.Superficial.Area.SD,
+                    ymax=Head.Superficial.Area.Mean+Head.Superficial.Area.SD), width=.2, color = "black")+
+  ylab("Head Superficial Neuromasts per cm^2")+
+  theme_classic()
+
+head_superficial_aov <- aov(Head.Superficial.Area ~ Fish, data = neuromast_counts)
+summary(head_superficial_aov)
+TukeyHSD(head_superficial_aov)
+
+ggplot(neuromast_per_area, aes(x = Fish, y = Body.Superficial.Area, color = Fish))+
+  geom_point()+
+  geom_point(aes(y = Body.Superficial.Area.Mean), color = "black")+
+  geom_errorbar(aes(ymin=Body.Superficial.Area.Mean-Body.Superficial.Area.SD,
+                    ymax=Body.Superficial.Area.Mean+Body.Superficial.Area.SD), width=.2, color = "black")+
+  ylab("Body Superficial Neuromasts per cm^2")+
+  theme_classic()
+
+body_superficial_aov <- aov(Body.Superficial.Area ~ Fish, data = neuromast_counts)
+summary(body_superficial_aov)
+TukeyHSD(body_superficial_aov)
+
+```
+
+```{r}
+
+neuromast_per_area <- neuromast_counts %>% select(-c(All.Superficial,All.Superficial.Area,
+                                                     Canal.Neuromast,Canal.Neuromast.Area, Length)) %>%
+                                           pivot_longer(!c(Fish,ID), names_to = "Area", values_to = "Count") %>%
+  
+                                           group_by(Fish,ID) %>%
+                                           mutate(Percents = Count / sum(Count)) %>%
+                                           ungroup() %>%
+  
+                                           group_by(Fish,Area) %>%
+                                           summarise(Percents = Percents,
+                                                     Percents.Mean = mean(Percents),
+                                                     Percents.SD = sd(Percents))
+
+ggplot(neuromast_per_area, aes(Area, Percents, color = Area))+
+  facet_wrap(~Fish)+
+  geom_point()+
+  geom_point(aes(y = Percents.Mean), color = "black")+
+  geom_errorbar(aes(ymin=Percents.Mean-Percents.SD,
+                    ymax=Percents.Mean+Percents.SD), width=.2, color = "black")+
+  ylab("Percent of Neuromasts")+
+  xlab("")+
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+ 
+```
+
+```{r}
+
+neuromast_chi_sqr <- neuromast_counts %>% select(-c(All.Superficial,All.Superficial.Area,
+                                                     Canal.Neuromast,Canal.Neuromast.Area, Length)) %>%
+                                         group_by(Fish) %>%
+                                         summarise(Superficial.Above.LL = sum(Superficial.Above.LL),
+                                                   Superficial.Below.LL = sum(Superficial.Below.LL),
+                                                   Superficial.Head = sum(Superficial.Head),
+                                                   Superficial.LL.Scales = sum(Superficial.LL.Scales),
+                                                   Superficial.Operculum = sum(Superficial.Operculum),
+                                                   Superficial.Tailfin = sum(Superficial.Tailfin)) 
+
+neuromast_chi_sqr_tbl <- as.table(rbind(neuromast_chi_sqr$Superficial.Above.LL,
+                                    neuromast_chi_sqr$Superficial.Below.LL,
+                                    neuromast_chi_sqr$Superficial.Head,
+                                    neuromast_chi_sqr$Superficial.LL.Scales,
+                                    neuromast_chi_sqr$Superficial.Operculum,
+                                    neuromast_chi_sqr$Superficial.Tailfin))
+
+dimnames(neuromast_chi_sqr_tbl) <- list(neuromast_type = colnames(neuromast_chi_sqr)[2:7],
+                                        fish = c("CB","GD", "NT"))
+neuromast_chi_sqr_tbl
+
+chisq <- chisq.test(neuromast_chi_sqr_tbl)
+chisq
+round(chisq$residuals, 3)
+
+```
+
+## Tailbeat Frequency
+
+```{r}
+
+ggplot(school_data,
+       aes(x = Ablation, y = Tailbeat_Freq,
+           color = Ablation,
+           fill = Ablation))+
+  facet_wrap(~ Species)+
+  stat_dots(side = "both", binwidth = unit(dot_binwidth, "npc")) +
+  geom_point(aes(y = Tailbeat_Freq_Mean_Val), size = 5, color = "Black") +
+  geom_errorbar(aes(ymin=Tailbeat_Freq_Mean_Val-Tailbeat_Freq_SD_Val,
+                    ymax=Tailbeat_Freq_Mean_Val+Tailbeat_Freq_SD_Val), width=.2, color = "Black")+
+  guides(fill = guide_legend(title = "Condition")) +
+  scale_fill_manual(values=c(light_no_ab_color, light_ab_color, dark_no_ab_color, dark_ab_color)) +
+  scale_color_manual(values=c(light_no_ab_color, light_ab_color, dark_no_ab_color, dark_ab_color)) +
+  #ggtitle("Effect of Available Senses on Nearest Neighbor Distance (NND) in Still Water") +
+  xlab("") +
+  ylab("Tailbeat Frequency") +
+  theme_light()+ 
+  theme(legend.position = "none")
+
+ggplot(school_data, aes(Tailbeat_Freq, School_Polar, color = Ablation))+
+  facet_wrap(~ Species)+
+  geom_point()+
+  geom_smooth(method = "lm", se = T)+
+  theme_classic()
+
+ggplot(school_data, aes(Tailbeat_Freq, School_Speed, color = Ablation))+
+  facet_wrap(~ Species)+
+  geom_point()+
+  geom_smooth(method = "lm", se = T)+
+  theme_classic()
+
+
+Speed_TB_lm <- lm(School_Speed ~ Tailbeat_Freq*Species*Ablation, data = school_data) 
+summary(Speed_TB_lm)
+Anova(Speed_TB_lm, type=c("III"))
+
+```
+ ## Burst and coast
+ 
+```{r}
+
+fish_comp_data <- read.csv("Data/Fish_Comp_Values_3D.csv") %>%
+                           mutate(Flow = ifelse(Flow == "0", "Still Water", "Flowing Water (2 BL/s)")) %>%
+                           mutate(Ablation = ifelse(Ablation  == "N", "No Ablation", "Ablated")) %>%
+                           mutate(Darkness = ifelse(Darkness == "N", "Light", "Dark")) %>%
+                           mutate(Flow = factor(Flow), Ablation = factor(Ablation), Darkness = factor(Darkness)) %>%
+                           mutate(Ablation = fct_relevel(Ablation, c("No Ablation","Ablated"))) %>%
+                           mutate(Ablation_Species = factor(paste(Ablation,Species,sep="/n"))) %>%
+                           separate(Fish, c("Fish1", "Fish2"),sep="x") %>% 
+                           mutate(Data_ID = paste(Year,Month,Day,Trial, sep = "_"),
+                                  Date = paste(Year,Month,Day,Trial, sep = "_"),
+                                  Fish_ID = paste(Year,Month,Day,Trial,Fish1, sep = "_"),
+                                  Comp_ID = paste(Year,Month,Day,Trial,Fish1,Fish2, sep = "_"))
+
+speed_sd_df <- fish_comp_data %>% group_by(Fish_ID, Ablation, Species, Ablation_Species) %>% 
+                                  summarise(Speed_SD = mean(Fish1_Speed_SD),
+                                            Speed_CV = mean(Fish1_Speed_CV)) %>%
+                                  ungroup() %>%
+                                  group_by(Ablation_Species) %>%
+                                  mutate(Speed_SD_Mean_Val = mean(Speed_SD,na.rm = T), 
+                                         Speed_SD_SD_Val = sd(Speed_SD,na.rm = T),
+                                         Speed_CV_Mean_Val = mean(Speed_CV,na.rm = T), 
+                                         Speed_CV_SD_Val = sd(Speed_CV,na.rm = T)) %>%
+                                  ungroup()
+
+```
+
+
+```{r}
+
+ggplot(speed_sd_df,
+       aes(x = Ablation, y = Speed_CV,
+           color = Ablation,
+           fill = Ablation))+
+  facet_wrap(~ Species)+
+  stat_dots(side = "both", binwidth = unit(dot_binwidth, "npc")) +
+  geom_point(aes(y = Speed_CV_Mean_Val), size = 5, color = "Black") +
+  geom_errorbar(aes(ymin=Speed_CV_Mean_Val-Speed_CV_SD_Val,
+                    ymax=Speed_CV_Mean_Val+Speed_CV_SD_Val), width=.2, color = "Black")+
+  guides(fill = guide_legend(title = "Condition")) +
+  scale_fill_manual(values=c(light_no_ab_color, light_ab_color, dark_no_ab_color, dark_ab_color)) +
+  scale_color_manual(values=c(light_no_ab_color, light_ab_color, dark_no_ab_color, dark_ab_color)) +
+  #ggtitle("Effect of Available Senses on Nearest Neighbor Distance (NND) in Still Water") +
+  xlab("") +
+  ylab("Individual Fish Speed COV") +
+  theme_light()+ 
+  theme(legend.position = "none")
+
+# Speed_SD_lm <- lm(Speed_SD ~ Species * Ablation, data = speed_sd_df)
+# Anova(Speed_SD_lm, type=c("III"))
+# emmeans(Speed_SD_lm, pairwise ~ Ablation+Species)
+
+Speed_CV_lm <- lm(Speed_CV ~ Species * Ablation, data = speed_sd_df)
+Anova(Speed_CV_lm, type=c("III"))
+emmeans(Speed_CV_lm,  pairwise ~ Ablation|Species)
+emmeans(Speed_CV_lm,  pairwise ~ Species|Ablation)
+
+```
+
+
+## NN Histograms
+
+```{r}
+
+CB_len <- 0.038
+GD_len <- 0.083197
+NT_len <- 0.032875
+
+fish_comp_data <- read.csv("Data/Fish_Comp_Values_3D.csv") %>%
+                           mutate(Flow = ifelse(Flow == "0", "Still Water", "Flowing Water (2 BL/s)")) %>%
+                           mutate(Ablation = ifelse(Ablation  == "N", "No Ablation", "Ablated")) %>%
+                           mutate(Darkness = ifelse(Darkness == "N", "Light", "Dark")) %>%
+                           mutate(Flow = factor(Flow), Ablation = factor(Ablation), Darkness = factor(Darkness)) %>%
+                           mutate(Ablation = fct_relevel(Ablation, c("No Ablation","Ablated"))) %>%
+                           mutate(Ablation_Species = factor(paste(Ablation,Species,sep=", "))) %>%
+                           separate(Fish, c("Fish1", "Fish2"),sep="x") %>% 
+                           mutate(Data_ID = paste(Year,Month,Day,Trial, sep = "_"),
+                                  Date = paste(Year,Month,Day,Trial, sep = "_"),
+                                  Fish_ID = paste(Year,Month,Day,Trial,Fish1, sep = "_"),
+                                  Comp_ID = paste(Year,Month,Day,Trial,Fish1,Fish2, sep = "_"))
+
+fish_comp_data <- fish_comp_data %>% mutate(Distance_M = case_when(Species == "Cherry Barb" ~ Distance * CB_len * 100,
+                                                                   Species == "Giant Danio" ~ Distance * GD_len * 100,
+                                                                   Species == "Neon Tetra" ~ Distance * NT_len * 100,
+                                                                   TRUE ~ 10^10))
+
+```
+
+
+```{r}
+
+library(effectsize)
+
+fish_comp_data_test <- fish_comp_data %>% mutate(log_Distance = log(Distance),
+                                                 log_Distance_M = log(Distance_M))
+
+ggplot(fish_comp_data_test, aes(x = Distance, fill = Species))+
+  geom_histogram(bins = 20, boundary = 0)+
+  facet_wrap(~Species)+
+  xlab("Distance (BL)")+
+  theme_classic()
+
+ggplot(fish_comp_data_test, aes(x = Distance_M, fill = Species))+
+  geom_histogram(bins = 20, boundary = 0)+
+  facet_wrap(~Species)+
+  xlab("Distance (cm)")+
+  theme_classic()
+
+BL_dist_aov <- aov(log_Distance ~ Species, data = fish_comp_data_test)
+Anova(BL_dist_aov)
+TukeyHSD(BL_dist_aov)
+#etaSquared(BL_dist_aov)
+
+M_dist_aov <- aov(log_Distance_M ~ Species, data = fish_comp_data_test)
+Anova(M_dist_aov)
+TukeyHSD(M_dist_aov)
+etaSquared(M_dist_aov)
+
+
+```
+
+# Looking at NND sep in Tetras
+
+```{r}
+
+tetra_data <- school_data %>% filter(Species == "Neon Tetra")
+
+ggplot(tetra_data %>% filter(Ablation == "No Ablation"),
+       aes(x = Tailbeat_Num, y = NND, color = as.factor(Trial)))+
+  geom_point(size = 2)+
+  geom_line()+
+  theme_classic()
+
+```
+

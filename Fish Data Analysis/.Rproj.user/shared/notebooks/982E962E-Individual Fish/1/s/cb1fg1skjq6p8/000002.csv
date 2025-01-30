@@ -1,0 +1,62 @@
+"0","```r
+m_speed <- aov(Speed ~ Flow + Ablation + Darkness + Flow:Ablation + Flow:Darkness, data = indiv_data)
+Anova(m_speed)
+```"
+"1","Anova Table (Type II tests)
+
+Response: Speed
+               Sum Sq   Df   F value    Pr(>F)    
+Flow           950.70    1 2139.6435 < 2.2e-16 ***
+Ablation        86.09    1  193.7462 < 2.2e-16 ***
+Darkness         7.72    1   17.3724 3.137e-05 ***
+Flow:Ablation    1.31    1    2.9591   0.08547 .  
+Flow:Darkness    0.73    1    1.6345   0.20115    
+Residuals     1803.97 4060                        
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+"
+"0","```r
+TukeyHSD(m_speed)
+```"
+"1","  Tukey multiple comparisons of means
+    95% family-wise confidence level
+
+Fit: aov(formula = Speed ~ Flow + Ablation + Darkness + Flow:Ablation + Flow:Darkness, data = indiv_data)
+
+$Flow
+                                       diff      lwr      upr p adj
+Flowing Water (2 BL/s)-Still Water 1.067161 1.024984 1.109338     0
+
+$Ablation
+                         diff        lwr        upr p adj
+Ablated-No Ablation -0.397215 -0.4396965 -0.3547336     0
+
+$Darkness
+                 diff        lwr      upr     p adj
+Dark-Light 0.07776735 0.03298274 0.122552 0.0006694
+
+$`Flow:Ablation`
+                                                                        diff        lwr        upr p adj
+Flowing Water (2 BL/s):No Ablation-Still Water:No Ablation         1.0213988  0.9525734  1.0902242     0
+Still Water:Ablated-Still Water:No Ablation                       -0.4188430 -0.4887927 -0.3488933     0
+Flowing Water (2 BL/s):Ablated-Still Water:No Ablation             0.6571489  0.5694307  0.7448671     0
+Still Water:Ablated-Flowing Water (2 BL/s):No Ablation            -1.4402418 -1.5162232 -1.3642604     0
+Flowing Water (2 BL/s):Ablated-Flowing Water (2 BL/s):No Ablation -0.3642499 -0.4568496 -0.2716502     0
+Flowing Water (2 BL/s):Ablated-Still Water:Ablated                 1.0759919  0.9825535  1.1694303     0
+
+$`Flow:Darkness`
+                                                                diff         lwr        upr     p adj
+Flowing Water (2 BL/s):Light-Still Water:Light            1.03465367  0.96543901  1.1038683 0.0000000
+Still Water:Dark-Still Water:Light                        0.05955636 -0.02304672  0.1421594 0.2487706
+Flowing Water (2 BL/s):Dark-Still Water:Light             1.14146729  1.06450334  1.2184312 0.0000000
+Still Water:Dark-Flowing Water (2 BL/s):Light            -0.97509732 -1.06794456 -0.8822501 0.0000000
+Flowing Water (2 BL/s):Dark-Flowing Water (2 BL/s):Light  0.10681362  0.01894558  0.1946817 0.0097097
+Flowing Water (2 BL/s):Dark-Still Water:Dark              1.08191094  0.98315168  1.1806702 0.0000000
+"
+"0","```r
+ggplot(indiv_data,aes(x=Speed))+
+  geom_histogram() +
+  facet_wrap(~ Flow + Ablation + Darkness, scales=\"free\") +
+  xlim(0,6) +
+  theme_light()
+```"

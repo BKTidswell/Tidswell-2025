@@ -1,0 +1,5 @@
+"0","```r
+summary(speed_gam)
+```"
+"1","Error in summary(speed_gam) : object 'speed_gam' not found
+"

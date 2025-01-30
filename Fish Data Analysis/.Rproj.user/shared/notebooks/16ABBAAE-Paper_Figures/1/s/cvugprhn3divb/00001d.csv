@@ -1,0 +1,7 @@
+"0",""
+"0","heading_PS_mega_plot <- annotate_figure(heading_PS_mega_plot, "
+"0","                top = text_grob(""  Near (< 2.5 BL)                                                Far (> 2.5 BL)"","
+"0","                                size = 24))"
+"0",""
+"0","ggsave(""Paper Figures/Figure 3.png"", heading_PS_mega_plot, width = 20, height = 7)"
+"0",""

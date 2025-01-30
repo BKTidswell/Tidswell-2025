@@ -1,0 +1,7 @@
+"0","```r
+
+#All variables
+speed_m_all = lm(crim~.,data = Boston)
+```"
+"1","Error in is.data.frame(data) : object 'Boston' not found
+"

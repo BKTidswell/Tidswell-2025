@@ -1,0 +1,40 @@
+"0","```r
+ggplot(comp_data_freqs, aes(x = Freq, y = Speed_Diff, color = interaction(Ablation,Darkness,sep=\", \"),
+                       fill = interaction(Ablation,Darkness,sep=\", \"))) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = \"lm\", formula = \"y ~ x\", se = FALSE) +
+  facet_wrap(~ Flow) +
+  guides(fill = \"none\", color = guide_legend(title = \"Condition\")) +
+  scale_color_manual(values=c(\"#000000\", \"#4CB944\", \"#00A7E1\")) +
+  scale_fill_manual(values=c(\"#000000\", \"#4CB944\", \"#00A7E1\")) +
+  ggtitle(\"Effect of Preference and Senses on Speed Difference\") +
+  xlab(\"Frequency of Observations\") +
+  ylab(\"Speed Difference (BL/s)\") +
+  theme_light()
+
+ggplot(comp_data_freqs, aes(x = Freq, y = Fold_Heading_Diff, color = interaction(Ablation,Darkness,sep=\", \"),
+                       fill = interaction(Ablation,Darkness,sep=\", \"))) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = \"lm\", formula = \"y ~ x\", se = FALSE) +
+  facet_wrap(~ Flow) +
+  guides(fill = \"none\", color = guide_legend(title = \"Condition\")) +
+  scale_color_manual(values=c(\"#000000\", \"#4CB944\", \"#00A7E1\")) +
+  scale_fill_manual(values=c(\"#000000\", \"#4CB944\", \"#00A7E1\")) +
+  ggtitle(\"Effect of Preference and Senses on Heading Difference\") +
+  xlab(\"Frequency of Observations\") +
+  ylab(\"Heading Difference (Degrees)\") +
+  theme_light()
+
+ggplot(comp_data_freqs, aes(x = Freq, y = Sync, color = interaction(Ablation,Darkness,sep=\", \"),
+                       fill = interaction(Ablation,Darkness,sep=\", \"))) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = \"lm\", formula = \"y ~ x\", se = FALSE) +
+  facet_wrap(~ Flow) +
+  guides(fill = \"none\", color = guide_legend(title = \"Condition\")) +
+  scale_color_manual(values=c(\"#000000\", \"#4CB944\", \"#00A7E1\")) +
+  scale_fill_manual(values=c(\"#000000\", \"#4CB944\", \"#00A7E1\")) +
+  ggtitle(\"Effect of Preference and Senses on Synchonization\") +
+  xlab(\"Frequency of Observations\") +
+  ylab(\"Synchonization\") +
+  theme_light()
+```"

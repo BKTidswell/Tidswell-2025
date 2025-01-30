@@ -1,0 +1,66 @@
+"0","```r
+m_tailbeats <- aov(TB_Frequency ~ Flow + Ablation + Darkness + Flow*Ablation + Flow*Darkness, data = indiv_data)
+Anova(m_tailbeats)
+```"
+"1","Anova Table (Type II tests)
+
+Response: TB_Frequency
+               Sum Sq   Df  F value    Pr(>F)    
+Flow            317.5    1 127.6565 < 2.2e-16 ***
+Ablation          0.9    1   0.3436    0.5578    
+Darkness        136.5    1  54.8686 1.559e-13 ***
+Flow:Ablation     0.0    1   0.0016    0.9678    
+Flow:Darkness     0.4    1   0.1694    0.6806    
+Residuals     10098.6 4060                       
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+"
+"0","```r
+TukeyHSD(m_tailbeats)
+```"
+"1","  Tukey multiple comparisons of means
+    95% family-wise confidence level
+
+Fit: aov(formula = TB_Frequency ~ Flow + Ablation + Darkness + Flow * Ablation + Flow * Darkness, data = indiv_data)
+
+$Flow
+                                        diff       lwr       upr p adj
+Flowing Water (2 BL/s)-Still Water 0.6868309 0.5870395 0.7866223     0
+
+$Ablation
+                          diff        lwr         upr     p adj
+Ablated-No Ablation -0.1834231 -0.2839344 -0.08291182 0.0003506
+
+$Darkness
+                diff       lwr       upr p adj
+Dark-Light 0.3418218 0.2358612 0.4477824     0
+
+$`Flow:Ablation`
+                                                                        diff        lwr         upr     p adj
+Flowing Water (2 BL/s):No Ablation-Still Water:No Ablation         0.6666271  0.5037860  0.82946825 0.0000000
+Still Water:Ablated-Still Water:No Ablation                       -0.1924517 -0.3579531 -0.02695035 0.0149575
+Flowing Water (2 BL/s):Ablated-Still Water:No Ablation             0.4967465  0.2892047  0.70428818 0.0000000
+Still Water:Ablated-Flowing Water (2 BL/s):No Ablation            -0.8590788 -1.0388513 -0.67930638 0.0000000
+Flowing Water (2 BL/s):Ablated-Flowing Water (2 BL/s):No Ablation -0.1698806 -0.3889719  0.04921065 0.1907881
+Flowing Water (2 BL/s):Ablated-Still Water:Ablated                 0.6891982  0.4681225  0.91027386 0.0000000
+
+$`Flow:Darkness`
+                                                               diff        lwr         upr     p adj
+Flowing Water (2 BL/s):Light-Still Water:Light            0.6298694  0.4661071  0.79363162 0.0000000
+Still Water:Dark-Still Water:Light                        0.3841558  0.1887165  0.57959506 0.0000028
+Flowing Water (2 BL/s):Dark-Still Water:Light             0.9608854  0.7787883  1.14298252 0.0000000
+Still Water:Dark-Flowing Water (2 BL/s):Light            -0.2457136 -0.4653906 -0.02603659 0.0211731
+Flowing Water (2 BL/s):Dark-Flowing Water (2 BL/s):Light  0.3310160  0.1231198  0.53891224 0.0002545
+Flowing Water (2 BL/s):Dark-Still Water:Dark              0.5767297  0.3430648  0.81039453 0.0000000
+"
+"0","```r
+ggplot(indiv_data, aes(x = Flow, y = TB_Frequency, fill = interaction(Ablation,Darkness,sep=\", \")))+
+  geom_boxplot(outlier.shape = NA) +
+  guides(fill = guide_legend(title = \"Condition\")) +
+  scale_fill_manual(values=c(\"#EEEEEE\", \"#4CB944\", \"#00A7E1\")) +
+  ggtitle(\"Effect of Available Senses on Fish Tailbeat Frequency\") +
+  xlab(\"\") +
+  ylim(0,7) +
+  ylab(\"Tailbeat Frequency (Beats/s)\") +
+  theme_light()
+```"

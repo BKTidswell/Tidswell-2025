@@ -1,0 +1,8 @@
+"0","fish_speed_division <- speed_whole_school %>% inner_join(indiv_data_4_speed, by = c(""Year"", ""Month"", ""Day"", ""Trial"", ""Tailbeat_Num"")) %>%
+                                              mutate(Divided_Speed = School_Speed/Mean_Speed,
+                                                     Sub_Speed = if(Flow == ""Flowing Water (2 BL/s)"", School_Speed - 2, School_Speed))
+"
+"2","Error: unexpected ',' in:
+""                                              mutate(Divided_Speed = School_Speed/Mean_Speed,
+                                                     Sub_Speed = if(Flow == ""Flowing Water (2 BL/s)"",""
+"

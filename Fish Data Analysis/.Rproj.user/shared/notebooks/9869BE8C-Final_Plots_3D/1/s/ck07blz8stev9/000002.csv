@@ -1,0 +1,15 @@
+"0","```r
+school_data <- read.csv(\"Data/Fish_School_Values_3D.csv\")
+school_data <- na.omit(school_data)
+
+school_data <- school_data %>% mutate(Flow = ifelse(Flow == \"0\", \"Still Water\", \"Flowing Water (2 BL/s)\")) %>%
+                           mutate(Ablation = ifelse(Ablation == \"N\", \"No Ablation\", \"Ablated\")) %>%
+                           mutate(Darkness = ifelse(Darkness == \"N\", \"Light\", \"Dark\")) %>%
+                           filter(School_Speed < 7) %>%
+                           mutate(Flow = factor(Flow), Ablation = factor(Ablation), Darkness = factor(Darkness)) %>%
+                           mutate(Flow = fct_relevel(Flow, c(\"Still Water\",\"Flowing Water (2 BL/s)\"))) %>%
+                           mutate(Ablation = fct_relevel(Ablation, c(\"No Ablation\",\"Ablated\"))) %>%
+                           mutate(Darkness = fct_relevel(Darkness, c(\"Light\",\"Dark\"))) %>%
+                           mutate(Flow_Ablation_Darkness = factor(paste(Flow,Ablation,Darkness,sep=\", \"))) %>% 
+                           filter(Flow %in% allowed_flow_type)
+```"

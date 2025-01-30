@@ -1,0 +1,45 @@
+"0","```r
+my_comparisons <- list( c(\"No Ablation, Light\", \"No Ablation, Dark\"), c(\"No Ablation, Light\", \"Ablated, Light\") )
+
+ggplot(count_within_2, 
+       aes(x = interaction(Ablation,Darkness,sep=\", \"), y = Mean_Count_Fish_in_2BL+1,
+           fill = interaction(Ablation,Darkness,sep=\", \")))+
+  geom_boxplot(outlier.shape = NA) +
+  guides(fill = guide_legend(title = \"Condition\")) +
+  scale_fill_manual(values=c(light_no_ab_color, light_ab_color, dark_no_ab_color)) +
+  ggtitle(\"3D Data: Mean size of group within 2BL\") +
+  xlab(\"\") +
+  ylab(\"Mean size of group within 2BL (# of Fish)\") +
+  ylim(0,9) +
+  theme_light() +
+  facet_wrap(~ Flow, strip.position = \"bottom\")+
+  #stat_compare_means(aes(label = ..p.signif..), method = \"t.test\", ref.group = \"Flow 0, No Ablation, Light\")
+  stat_compare_means(comparisons = my_comparisons, label.y = c(7.5,8.5), label = \"p.signif\", hide.ns = TRUE) +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) + 
+  scale_y_continuous(breaks=c(0,2,4,6,8))
+```"
+"1","Scale for 'y' is already present. Adding another scale for 'y', which will replace the existing scale.
+Warning in wilcox.test.default(c(4.3, 4.47368421052632, 4.1304347826087,  :
+  cannot compute exact p-value with ties
+Warning in wilcox.test.default(c(4.3, 4.47368421052632, 4.1304347826087,  :
+  cannot compute exact p-value with ties
+Warning in wilcox.test.default(c(3.57142857142857, 3.47692307692308, 2.98461538461538,  :
+  cannot compute exact p-value with ties
+Warning in wilcox.test.default(c(3.57142857142857, 3.47692307692308, 2.98461538461538,  :
+  cannot compute exact p-value with ties
+"
+"0","```r
+ggsave(\"Final Graphs/Mean_Group_Size_3D.png\")
+```"
+"1","Saving 7.29 x 4.51 in image
+Warning in wilcox.test.default(c(4.3, 4.47368421052632, 4.1304347826087,  :
+  cannot compute exact p-value with ties
+Warning in wilcox.test.default(c(4.3, 4.47368421052632, 4.1304347826087,  :
+  cannot compute exact p-value with ties
+Warning in wilcox.test.default(c(3.57142857142857, 3.47692307692308, 2.98461538461538,  :
+  cannot compute exact p-value with ties
+Warning in wilcox.test.default(c(3.57142857142857, 3.47692307692308, 2.98461538461538,  :
+  cannot compute exact p-value with ties
+"

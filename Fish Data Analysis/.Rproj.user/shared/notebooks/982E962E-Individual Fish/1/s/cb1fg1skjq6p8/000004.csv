@@ -1,0 +1,12 @@
+"0","```r
+
+ggplot(indiv_data %>% filter(Speed < 5), aes(x = Flow, y = Speed, fill = interaction(Ablation,Darkness,sep=\", \")))+
+  geom_boxplot(outlier.shape = NA) +
+  guides(fill = guide_legend(title = \"Condition\")) +
+  scale_fill_manual(values=c(\"#EEEEEE\", \"#4CB944\", \"#00A7E1\")) +
+  ggtitle(\"Effect of Available Senses on Fish Speed\") +
+  xlab(\"\") +
+  #ylim(0,5) +
+  ylab(\"Speed (BL/s)\") +
+  theme_light()
+```"

@@ -1,0 +1,55 @@
+"0","```r
+set.seed(7)
+
+comp_data_speed_model <- comp_data %>% select(c(Flow,Darkness,Ablation,Angle,Distance,Speed_Diff))
+
+max_poly <- 10
+
+speed_dist_cv_error_10 <- rep(0,max_poly)
+speed_dist_AIC_10 <- rep(0,max_poly)
+
+
+for (i in 1:max_poly){
+  speed_dist_fit <- glm(Speed_Diff ~ poly(Distance,i)*(Ablation+Flow+Darkness+Ablation:Flow+Darkness:Flow),
+                        data = comp_data_speed_model)
+  speed_dist_cv_error_10[i] <- cv.glm(comp_data_speed_model, speed_dist_fit, K = 10)$delta[1]
+  speed_dist_AIC_10[i] <- AIC(speed_dist_fit)
+}
+
+speed_angle_cv_error_10 <- rep(0,max_poly)
+speed_angle_AIC_10 <- rep(0,max_poly)
+
+
+for (i in 1:max_poly){
+  speed_angle_fit <- glm(Speed_Diff ~ poly(Angle,i)*(Ablation+Flow+Darkness+Ablation:Flow+Darkness:Flow),
+                         data = comp_data_speed_model)
+  speed_angle_cv_error_10[i] <- cv.glm(comp_data_speed_model, speed_angle_fit, K = 10)$delta[1]
+  speed_angle_AIC_10[i] <- AIC(speed_angle_fit)
+}
+
+speed_poly_plot_df <- data.frame(c(seq(max_poly),seq(max_poly)),
+                                 c(speed_dist_cv_error_10,speed_angle_cv_error_10),
+                                 c(speed_dist_AIC_10,speed_angle_AIC_10),
+                                 c(rep(\"Distance\",max_poly),rep(\"Angle\",max_poly)))
+
+colnames(speed_poly_plot_df) <- c(\"Degree\",\"Error\",\"AIC\",\"Predictor\")
+
+speed_poly_plot_df <- speed_poly_plot_df %>% group_by(Predictor) %>%
+                                             mutate(minError = min(Error),minAIC = min(AIC)) %>%
+                                             ungroup() %>%
+                                             mutate(isMinEror = ifelse(Error == minError,3,1),isMinAIC = ifelse(AIC == minAIC,3,1))
+
+ggplot(speed_poly_plot_df, aes(x = Degree, y = Error, color = Predictor))+
+  geom_point(size = speed_poly_plot_df$isMinEror)+
+  geom_line()+
+  theme_light()+
+  facet_wrap(~ Predictor, scales = \"free\") +
+  scale_size(guide = \"none\")
+
+ggplot(speed_poly_plot_df, aes(x = Degree, y = AIC, color = Predictor))+
+  geom_point(size = speed_poly_plot_df$isMinAIC)+
+  geom_line()+
+  theme_light()+
+  facet_wrap(~ Predictor, scales = \"free\") +
+  scale_size(guide = \"none\")
+```"

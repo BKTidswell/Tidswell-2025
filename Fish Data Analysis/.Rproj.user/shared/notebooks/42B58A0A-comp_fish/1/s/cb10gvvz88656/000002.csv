@@ -1,0 +1,7 @@
+"0","```r
+ggplot(heading_pred, aes(x = Distance, y = Heading_Diff))+
+  geom_smooth()+
+  scale_fill_viridis() +
+  facet_wrap(~ Flow + Ablation + Darkness) +
+  theme_light()
+```"

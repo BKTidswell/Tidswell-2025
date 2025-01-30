@@ -1,0 +1,9 @@
+"0","```r
+ggplot(comp_data , aes(x = X_Distance, y = abs(Y_Distance)))+
+  stat_density_2d(aes(fill = ..density..), geom = \"raster\", contour = FALSE) +
+  scale_fill_viridis() +
+  facet_wrap(~ Flow + Ablation + Darkness) +
+  xlim(-3,3) + 
+  ylim(0,3) +
+  theme_light()
+```"

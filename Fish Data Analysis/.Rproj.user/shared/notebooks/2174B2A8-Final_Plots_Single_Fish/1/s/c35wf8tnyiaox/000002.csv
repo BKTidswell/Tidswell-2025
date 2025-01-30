@@ -1,0 +1,26 @@
+"0","```r
+speed_whole_school <- school_data
+
+indiv_data <- read.csv(\"Data/Fish_Individual_Values_Single_Fish.csv\")
+indiv_data <- na.omit(indiv_data)
+
+indiv_data <- indiv_data %>% mutate(Flow = ifelse(Flow == \"0\", \"Still Water\", \"Flowing Water (2 BL/s)\")) %>%
+                             mutate(Ablation = ifelse(Ablation == \"N\", \"No Ablation\", \"Ablated\")) %>%
+                             mutate(Darkness = ifelse(Darkness == \"N\", \"Light\", \"Dark\")) %>%
+                             mutate(Flow = factor(Flow), Ablation = factor(Ablation), Darkness = factor(Darkness)) %>%
+                           mutate(Flow = fct_relevel(Flow, c(\"Still Water\",\"Flowing Water (2 BL/s)\"))) %>%
+                           mutate(Ablation = fct_relevel(Ablation, c(\"No Ablation\",\"Ablated\"))) %>%
+                           mutate(Darkness = fct_relevel(Darkness, c(\"Light\",\"Dark\"))) %>%
+                           mutate(Flow_Ablation_Darkness = factor(paste(Flow,Ablation,Darkness,sep=\", \"))) %>%
+                           filter(Flow %in% allowed_flow_type)
+
+indiv_data_4_speed <- indiv_data %>% group_by(Year, Month, Day, Trial, Tailbeat_Num) %>%
+                                     summarise(Mean_Speed = mean(Speed))
+```"
+"1","`summarise()` has grouped output by 'Year', 'Month', 'Day', 'Trial'. You can override using the `.groups`
+argument.
+"
+"0","```r
+fish_speed_division <- speed_whole_school %>% inner_join(indiv_data_4_speed, by = c(\"Year\", \"Month\", \"Day\", \"Trial\", \"Tailbeat_Num\")) %>%
+                                              mutate(Divided_Speed = School_Speed/Mean_Speed)
+```"

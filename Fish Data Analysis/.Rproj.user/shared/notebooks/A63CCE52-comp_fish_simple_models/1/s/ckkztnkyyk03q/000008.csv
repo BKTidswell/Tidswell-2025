@@ -1,0 +1,40 @@
+"0","```r
+# sin_heading_gam_viz <- getViz(sin_heading_gam)
+# plotRGL(sm(sin_heading_gam_viz, 1), fix = c(\"Distance\" = 0))
+
+sync_gam <- gam(Sync ~ s(Distance,cos_Angle,sin_Angle,by=Flow_Ablation_Darkness), data = comp_data_near_3)
+summary(sync_gam)
+```"
+"1","
+Family: gaussian 
+Link function: identity 
+
+Formula:
+Sync ~ s(Distance, cos_Angle, sin_Angle, by = Flow_Ablation_Darkness)
+
+Parametric coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept) 0.541844   0.003992   135.7   <2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Approximate significance of smooth terms:
+                                                                                   edf Ref.df     F  p-value    
+s(Distance,cos_Angle,sin_Angle):Flow_Ablation_DarknessFlow 0, Ablated, Light     49.42  63.98 1.823 7.94e-05 ***
+s(Distance,cos_Angle,sin_Angle):Flow_Ablation_DarknessFlow 0, No Ablation, Dark  15.35  19.99 1.689  0.02782 *  
+s(Distance,cos_Angle,sin_Angle):Flow_Ablation_DarknessFlow 0, No Ablation, Light 43.25  56.84 1.008  0.45888    
+s(Distance,cos_Angle,sin_Angle):Flow_Ablation_DarknessFlow 2, Ablated, Light     18.36  24.37 1.176  0.23445    
+s(Distance,cos_Angle,sin_Angle):Flow_Ablation_DarknessFlow 2, No Ablation, Dark  20.13  26.71 1.700  0.01386 *  
+s(Distance,cos_Angle,sin_Angle):Flow_Ablation_DarknessFlow 2, No Ablation, Light 18.25  24.02 1.832  0.00788 ** 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Rank: 649/655
+R-sq.(adj) =  0.0577   Deviance explained = 9.22%
+GCV = 0.060991  Scale est. = 0.05875   n = 4511
+"
+"0","```r
+vis.gam(sync_gam)
+```"
+"1","data length [31] is not a sub-multiple or multiple of the number of rows [30]
+"

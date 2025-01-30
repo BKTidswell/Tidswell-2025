@@ -1,0 +1,41 @@
+"0","```r
+comp_data_near_1 <- bind_rows(comp_data, comp_data_switch_fish) %>% group_by(Year,Month,Day,Trial,Fish1,Tailbeat_Num) %>%
+                                                                 slice_max(Distance, n = 1) %>%
+                                                                 ungroup() %>%
+                                                                 distinct(Distance, .keep_all= TRUE)
+
+speed_anova_nn <- aov(Speed_Diff ~ Flow + Ablation + Darkness + Flow:Ablation + Flow:Darkness, data = comp_data_near_1)
+
+Anova(speed_anova_nn)
+```"
+"1","Anova Table (Type II tests)
+
+Response: Speed_Diff
+               Sum Sq   Df F value Pr(>F)
+Flow             0.95    1  1.2883 0.2565
+Ablation         0.49    1  0.6671 0.4141
+Darkness         1.82    1  2.4620 0.1168
+Flow:Ablation    0.75    1  1.0157 0.3137
+Flow:Darkness    0.09    1  0.1173 0.7320
+Residuals     1564.53 2122               
+"
+"0","```r
+my_comparisons <- list( c(\"No Ablation, Light\", \"No Ablation, Dark\"))
+
+ggplot(comp_data_near_1, aes(x = interaction(Ablation,Darkness,sep=\", \"), y = Speed_Diff, fill = interaction(Ablation,Darkness,sep=\", \")))+
+  geom_violin(outlier.shape = NA) +
+  guides(fill = guide_legend(title = \"Condition\")) +
+  scale_fill_manual(values=c(\"#EEEEEE\", \"#4CB944\", \"#00A7E1\")) +
+  ggtitle(\"Effect of Available Senses on Nearest Speed Diff\") +
+  xlab(\"\") +
+  ylab(\"Speed Difference (BL/s)\") +
+  theme_light() +
+  facet_wrap(~ Flow, strip.position = \"bottom\")+
+  #stat_compare_means(aes(label = ..p.signif..), method = \"t.test\", ref.group = \"Flow 0, No Ablation, Light\")
+  #stat_compare_means(comparisons = my_comparisons, label.y = c(7.5,8.5), label = \"p.signif\", hide.ns = TRUE) +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+```"
+"1","Ignoring unknown parameters: outlier.shape
+"

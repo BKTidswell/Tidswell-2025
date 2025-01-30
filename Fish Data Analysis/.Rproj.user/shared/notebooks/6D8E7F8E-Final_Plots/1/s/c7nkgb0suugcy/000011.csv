@@ -1,0 +1,8 @@
+"0","library(tidyverse) #For dplyr and data sorting"
+"0","library(ggplot2) #For plotting"
+"0","library(bbmle) #For ICtab"
+"0","library(car) #For Anova"
+"0","library(forcats) #For Factor Work"
+"0","library(ggpubr) #For the significance bars"
+"0","library(report) #For the reports"
+"0","library(emmeans) #For reporting"
