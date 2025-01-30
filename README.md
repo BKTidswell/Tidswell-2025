@@ -1,6 +1,6 @@
-# Code for Different functions for the lateral line in schooling behavior in three fish species
+# Code for *Different Functions for the Lateral Line in Schooling Behavior in Three Fish Species*
 
-Welcome to this Github respository for Different functions for the lateral line in schooling behavior in three fish species. If you are here, I assume you're interested in doing a deep dive into the code that I wrote to turn the positional data of fish into schooling kinematics. To that end this guide aims to walk you through running all the code from start to finish, and to explain the purpose the code files here. If you run into any issues with it feel free to raise an issue here or email me at b.k.tidswell@gmail.com. 
+Welcome to this Github respository for *Different Functions for the Lateral Line in Schooling Behavior in Three Fish Species*. If you are here, I assume you're interested in doing a deep dive into the code that I wrote to turn the positional data of fish into schooling kinematics. To that end this guide aims to walk you through running all the code from start to finish, and to explain the purpose the code files here. If you run into any issues with it feel free to raise an issue here or email me at b.k.tidswell@gmail.com. 
 
 As a note, this code was written to work on a Mac, so you may need to set up some things differently if you are using a Windows and Linux computer, particularly with the Conda enviornment, as well as some of the graphing functions. With that said, let's get started.
 
