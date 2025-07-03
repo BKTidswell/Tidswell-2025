@@ -19,7 +19,8 @@ library(lme4)
 library(sjPlot)
 library(multcompView)
 library(lmtest)
-
+library(nlme)
+library(glmmTMB)
 ```
 
 ## Functions and Variables
@@ -113,8 +114,10 @@ school_data <- school_data %>% mutate(Flow = ifelse(Flow == "0", "Still Water", 
                            mutate(Date = paste(Year,Month,Day,sep="_"),
                                   Date_Trial = paste(Year,Month,Day,Trial,sep="_")) %>%
                            group_by(Date_Trial) %>%
-                           filter(row_number() %% 3 == 1) %>%
+                           #filter(row_number() %% 2 == 1) %>%
                            ungroup()
+
+table(school_data$Species, school_data$Trial)
 
 all_fish_comp <- read.csv("Data/Fish_Raw_Points_3D.csv") %>% mutate(Flow = ifelse(Flow == "0", "Still Water", "Flowing Water (2 BL/s)")) %>%
                            mutate(Ablation = ifelse(Ablation == "N", "No Ablation", "Ablated")) %>%
@@ -164,7 +167,11 @@ group_sum_data_1_binom <- all_fish_comp_groups %>% mutate(Is_One = ifelse(Groups
 
 ```{r}
 
-nnd_lmer_still <- lm(NND ~ Ablation*Species + Trial, data = school_data)
+#nnd_lmer_still <- lm(NND ~ Ablation*Species + Trial, data = school_data)
+nnd_lmer_still <- lme(NND ~ Ablation*Species, 
+                             random = ~1|Trial/Species,
+                             correlation = corAR1(form = ~1|Trial/Species), 
+                             data = school_data)
 nnd_s_aov_me <- Anova(nnd_lmer_still, type=c("III"))
 em_out <- summary(emmeans(nnd_lmer_still, pairwise ~ Ablation*Species))$contrasts$p.value
 names(em_out) <- contrast_names
@@ -179,7 +186,11 @@ ggplot(school_data, aes(Trial, NND, color = interaction(Ablation,Species)))+
   geom_line(aes(y = predict(nnd_lmer_still)))+
   theme_classic()
 
-polar_lmer_still <- lm(School_Polar ~ Ablation*Species + Trial, data = school_data)
+#polar_lmer_still <- lm(School_Polar ~ Ablation*Species + Trial, data = school_data)
+polar_lmer_still <- lme(School_Polar ~ Ablation*Species, 
+                             random = ~1|Trial/Species,
+                             correlation = corAR1(form = ~1|Trial/Species), 
+                             data = school_data)
 polar_s_aov_me <- Anova(polar_lmer_still, type=c("III"))
 em_out <- summary(emmeans(polar_lmer_still, pairwise ~ Ablation*Species))$contrasts$p.value
 names(em_out) <- contrast_names
@@ -189,7 +200,11 @@ plot(polar_lmer_still)
 qqnorm(resid(polar_lmer_still))
 qqline(resid(polar_lmer_still))
 
-speed_lmer_still <- lm(School_Speed ~ Ablation*Species + Trial, data = school_data)
+#speed_lmer_still <- lm(School_Speed ~ Ablation*Species + Trial, data = school_data)
+speed_lmer_still <- lme(School_Speed ~ Ablation*Species, 
+                             random = ~1|Trial/Species,
+                             correlation = corAR1(form = ~1|Trial/Species), 
+                             data = school_data)
 speed_s_aov_me <- Anova(speed_lmer_still, type=c("III"))
 em_out <- summary(emmeans(speed_lmer_still, pairwise ~ Ablation*Species))$contrasts$p.value
 names(em_out) <- contrast_names
@@ -199,30 +214,31 @@ plot(speed_lmer_still)
 qqnorm(resid(speed_lmer_still))
 qqline(resid(speed_lmer_still))
 
-group_1_glm <- glm(Is_One ~ Ablation*Species*Group_Dist+Trial, data = group_sum_data_1_binom, family = "binomial")
+group_1_glm <- glmmTMB(Is_One ~ Ablation*Species*Group_Dist + ar1(as.factor(Tailbeat) + 0|Trial:Species), 
+                             data = group_sum_data_1_binom, family = "binomial")
 group_1_aov <- Anova(group_1_glm, type=c("III"))
 emmeans(group_1_glm, pairwise ~ Ablation*Species | Group_Dist)
 em_out <- summary(emmeans(group_1_glm, pairwise ~ Ablation*Species | Group_Dist))$contrasts$p.value
 names(em_out) <- contrast_names
 multcompLetters(em_out)
 
-values_to_grab <- c(2,3,4,5)
-values_to_grab_groups <- c(1,2,3,4,5,6,7,8)
+values_to_grab <- c(2,3,4)
+values_to_grab_groups <- c(2,3,4,5,6,7,8)
 
-glmm_school_stats_table <- tibble(Stat = c(rep("NND",4),rep("Polarization",4),rep("Speed",4),rep("Groups",8)),
-       Condition = c(rep(c("Ablation","Species","Trial","Ablation x Species"), 3),
-                     c("Ablation","Species","Trial","Group Distance",
+glmm_school_stats_table <- tibble(Stat = c(rep("NND",3),rep("Polarization",3),rep("Speed",3),rep("Groups",7)),
+       Condition = c(rep(c("Ablation","Species","Ablation x Species"), 3),
+                     c("Ablation","Species","Group Distance",
                        "Ablation x Species","Ablation x Group Distance","Species x Group Distance",
                        "Ablation x Species x Group Distance")),
-       DF = c(rep(c(rep(length(nnd_lmer_still$model$NND)-3,4)),times = 3),rep(length(nnd_lmer_still$model$NND)-3,8)),
-       Chisq = round(c(nnd_s_aov_me$`F value`[values_to_grab],
-                 polar_s_aov_me$`F value`[values_to_grab],
-                 speed_s_aov_me$`F value`[values_to_grab],
-                 group_1_aov$`LR Chisq`[values_to_grab_groups]),2),
+       DF = c(rep(c(rep(length(nnd_lmer_still$data$NND)-3,3)),times = 3),rep(length(nnd_lmer_still$data$NND)-3,7)),
+       Chisq = round(c(nnd_s_aov_me$`Chisq`[values_to_grab],
+                 polar_s_aov_me$`Chisq`[values_to_grab],
+                 speed_s_aov_me$`Chisq`[values_to_grab],
+                 group_1_aov$`Chisq`[values_to_grab_groups]),2),
        
-       P_Val = round(c(nnd_s_aov_me$`Pr(>F)`[values_to_grab],
-                 polar_s_aov_me$`Pr(>F)`[values_to_grab],
-                 speed_s_aov_me$`Pr(>F)`[values_to_grab],
+       P_Val = round(c(nnd_s_aov_me$`Pr(>Chisq)`[values_to_grab],
+                 polar_s_aov_me$`Pr(>Chisq)`[values_to_grab],
+                 speed_s_aov_me$`Pr(>Chisq)`[values_to_grab],
                  group_1_aov$`Pr(>Chisq)`[values_to_grab_groups]),3),
        
        Is_Sig = P_Val < 0.05)
@@ -309,7 +325,7 @@ neuromast_counts <- read.csv("Data/neuromast_counts.csv") %>%
                            All.Superficial = Superficial.Above.LL+Superficial.Below.LL+Superficial.Head+
                                              Superficial.LL.Scales+Superficial.Operculum+Superficial.Tailfin,
                            All.Superficial.Area = All.Superficial/Area,
-                           Canal.Neuromast.Area = Canal.Neuromast/Area,
+                           Canal.Neuromast.Length = Canal.Neuromast/Length,
                            Head.Superficial.Area = (Superficial.Head+Superficial.Operculum)/Area,
                            Body.Superficial.Area = (Superficial.Above.LL+Superficial.Below.LL+
                                                       Superficial.LL.Scales++Superficial.Tailfin)/Area)
@@ -321,22 +337,14 @@ neuromast_counts <- read.csv("Data/neuromast_counts.csv") %>%
 
 neuromast_per_area <- neuromast_counts %>% group_by(Fish) %>%
                                           summarise(All.Superficial.Area = All.Superficial.Area,
-                                                    All.Superficial.Area.Mean = mean(All.Superficial.Area),
-                                                    All.Superficial.Area.SD = sd(All.Superficial.Area),
-                                                    Canal.Neuromast.Area = Canal.Neuromast.Area,
-                                                    Canal.Neuromast.Area.Mean = mean(Canal.Neuromast.Area),
-                                                    Canal.Neuromast.Area.SD = sd(Canal.Neuromast.Area),
+                                                    Canal.Neuromast.Length = Canal.Neuromast.Length,
                                                     Head.Superficial.Area = Head.Superficial.Area,
-                                                    Head.Superficial.Area.Mean = mean(Head.Superficial.Area),
-                                                    Head.Superficial.Area.SD = sd(Head.Superficial.Area),
-                                                    Body.Superficial.Area = Body.Superficial.Area,
-                                                    Body.Superficial.Area.Mean = mean(Body.Superficial.Area),
-                                                    Body.Superficial.Area.SD = sd(Body.Superficial.Area))
+                                                    Body.Superficial.Area = Body.Superficial.Area)
 
 superfical_aov <- aov(All.Superficial.Area ~ Fish, data = neuromast_counts)
 superfical_tukey <- TukeyHSD(superfical_aov)
 
-canal_aov <- aov(Canal.Neuromast.Area ~ Fish, data = neuromast_counts)
+canal_aov <- aov(Canal.Neuromast.Length ~ Fish, data = neuromast_counts)
 canal_tukey <- TukeyHSD(canal_aov)
 
 head_superficial_aov <- aov(Head.Superficial.Area ~ Fish, data = neuromast_counts)

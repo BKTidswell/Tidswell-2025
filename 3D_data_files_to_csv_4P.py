@@ -780,7 +780,7 @@ class school_comps:
         num_nans[num_nans <= 4] = 1
 
         #Multiply by fishlen and then by 100 to get it in cm not BL or meters
-        self.nearest_neighbor_distance = np.nanmean(np.nanmin(nnd_array,axis = 1), axis = 1)*num_nans* fish_len*100
+        self.nearest_neighbor_distance = np.nanmean(np.nanmin(nnd_array,axis = 1), axis = 1)*num_nans #*fish_len*100
         
     def calc_school_area(self):
         school_xs = np.asarray([fish.head_x for fish in self.fishes])
@@ -1019,12 +1019,12 @@ class trial:
                  'Flow': np.repeat(self.flow,data_len), 
                  'Species': np.repeat(self.fish_type,data_len), 
                  #get into cm, not BL or meters
-                 'Head_X': fish.head_x * fish_len*100,
-                 'Head_Y': fish.head_y * fish_len*100,
-                 'Head_Z': fish.head_z * fish_len*100,
-                 'Midline_X': fish.head_x * fish_len*100,
-                 'Midline_Y': fish.head_y * fish_len*100,
-                 'Midline_Z': fish.head_z * fish_len*100} #,
+                 'Head_X': fish.head_x, #* fish_len*100,
+                 'Head_Y': fish.head_y, #* fish_len*100,
+                 'Head_Z': fish.head_z, #* fish_len*100,
+                 'Midline_X': fish.head_x, #* fish_len*100,
+                 'Midline_Y': fish.head_y, #* fish_len*100,
+                 'Midline_Z': fish.head_z} #* fish_len*100} #,
 
             if firstfish:
                 out_data = pd.DataFrame(data=d)

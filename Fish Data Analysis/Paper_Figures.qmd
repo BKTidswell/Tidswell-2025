@@ -20,7 +20,8 @@ library(pracma)
 library(igraph)
 library(MASS)
 library(rstatix)
-
+library(nlme)
+library(glmmTMB)
 ```
 
 
@@ -57,7 +58,7 @@ tailbeat_len = 19
 
 allowed_flow_type = c("Still Water","Flowing Water (2 BL/s)")
 
-dot_binwidth = 0.02
+dot_binwidth = 0.011
 
 text_size = 16
 sig_text_size = 6
@@ -137,7 +138,7 @@ school_data <- school_data %>% mutate(Flow = ifelse(Flow == "0", "Still Water", 
                            mutate(Date = paste(Year,Month,Day,sep="_"),
                                   Date_Trial = paste(Year,Month,Day,Trial,sep="_")) %>%
                            group_by(Date_Trial) %>%
-                           filter(row_number() %% 3 == 1) %>%
+                           #filter(row_number() %% 2 == 1) %>%
                            ungroup() %>%
                            # ###
                           
@@ -156,7 +157,13 @@ school_data <- school_data %>% mutate(Flow = ifelse(Flow == "0", "Still Water", 
 
 ```{r}
 
-nnd_label_df <- tibble(Species = unique(school_data$Species),
+nnd_no_out <- school_data %>% group_by(Ablation,Species) %>%
+                              filter(!is.na(NND)) %>%
+                              filter(NND >= median(NND, nan.rm=T) - IQR(NND,na.rm =T)*1.5 &
+                                     NND <= median(NND, nan.rm=T) + IQR(NND,na.rm =T)*1.5) %>%
+                              ungroup()
+
+nnd_label_df <- tibble(Species = unique(nnd_no_out$Species),
                   Ablation = rep("No Ablation", 3),
                   group1 = rep("No Ablation", 3),
                   group2 = rep("Ablated", 3),
@@ -164,21 +171,21 @@ nnd_label_df <- tibble(Species = unique(school_data$Species),
 
 nnd_still <- ggplot()+
   facet_wrap(~Species)+
-  stat_pvalue_manual(nnd_label_df, y.position = 20, step.increase = 0,
+  stat_pvalue_manual(nnd_label_df, y.position = 5.75, step.increase = 0,
                      label = "p.signif", hide.ns = TRUE, bracket.size = 0.75, size = 7)+
-  stat_dots(school_data, mapping = aes(x = Ablation, y = NND, color = Ablation, fill = Ablation),
+  stat_dots(nnd_no_out, mapping = aes(x = Ablation, y = NND, color = Ablation, fill = Ablation),
             side = "both", binwidth = unit(dot_binwidth, "npc"))+
-  geom_point(school_data, mapping = aes(x = Ablation, y = NND_Mean_Val), size = 5, color = "Black")+
-  geom_errorbar(school_data, mapping = aes(x = Ablation,ymin=NND_Mean_Val-NND_SD_Val, ymax=NND_Mean_Val+NND_SD_Val),
+  geom_point(nnd_no_out, mapping = aes(x = Ablation, y = NND_Mean_Val), size = 5, color = "Black")+
+  geom_errorbar(nnd_no_out, mapping = aes(x = Ablation,ymin=NND_Mean_Val-NND_SD_Val, ymax=NND_Mean_Val+NND_SD_Val),
                 width=.2, color = "Black")+
-    geom_line(school_data, mapping = aes(x = Ablation, y = NND_Mean_Val, group = 1), size = 1, color = "Black", linetype = "dashed")+
+    geom_line(nnd_no_out, mapping = aes(x = Ablation, y = NND_Mean_Val, group = 1), size = 1, color = "Black", linetype = "dashed")+
   guides(fill = guide_legend(title = "Condition")) +
   scale_fill_manual(values=c(light_no_ab_color, light_ab_color, dark_no_ab_color, dark_ab_color)) +
   scale_color_manual(values=c(light_no_ab_color, light_ab_color, dark_no_ab_color, dark_ab_color)) +
   xlab("") +
-  ylab("School NND (cm)") +
+  ylab("School NND (BL)") +
   theme_light()+ 
-  ylim(0,21)+
+  ylim(0,6)+
   theme(legend.position = "none") +
   theme(axis.text.x = element_text(size = text_size),
         axis.text.y = element_text(size = text_size),
@@ -193,7 +200,13 @@ nnd_still
 
 ```{r}
 
-polar_label_df <- tibble(Species = unique(school_data$Species),
+polar_no_out <- school_data %>% group_by(Ablation,Species) %>%
+                              filter(!is.na(School_Polar)) %>%
+                              filter(School_Polar >= median(School_Polar, nan.rm=T) - IQR(School_Polar,na.rm =T)*1.5 &
+                                     School_Polar <= median(School_Polar, nan.rm=T) + IQR(School_Polar,na.rm =T)*1.5) %>%
+                              ungroup()
+
+polar_label_df <- tibble(Species = unique(polar_no_out$Species),
                   Ablation = rep("No Ablation", 3),
                   group1 = rep("No Ablation", 3),
                   group2 = rep("Ablated", 3),
@@ -203,12 +216,12 @@ polar_still <- ggplot()+
   facet_wrap(~Species)+
   stat_pvalue_manual(polar_label_df, y.position = 0.98, step.increase = 0,
                      label = "p.signif", hide.ns = TRUE, bracket.size = 0.75, size = 7)+
-  stat_dots(school_data, mapping = aes(x = Ablation, y = School_Polar, color = Ablation, fill = Ablation),
+  stat_dots(polar_no_out, mapping = aes(x = Ablation, y = School_Polar, color = Ablation, fill = Ablation),
             side = "both", binwidth = unit(dot_binwidth, "npc"))+
-  geom_point(school_data, mapping = aes(x = Ablation, y = Polar_Mean_Val), size = 5, color = "Black")+
-  geom_errorbar(school_data, mapping = aes(x = Ablation,ymin=Polar_Mean_Val-Polar_SD_Val, ymax=Polar_Mean_Val+Polar_SD_Val),
+  geom_point(polar_no_out, mapping = aes(x = Ablation, y = Polar_Mean_Val), size = 5, color = "Black")+
+  geom_errorbar(polar_no_out, mapping = aes(x = Ablation,ymin=Polar_Mean_Val-Polar_SD_Val, ymax=Polar_Mean_Val+Polar_SD_Val),
                 width=.2, color = "Black")+
-  geom_line(school_data, mapping = aes(x = Ablation, y = Polar_Mean_Val, group = 1), size = 1, color = "Black", linetype = "dashed")+
+  geom_line(polar_no_out, mapping = aes(x = Ablation, y = Polar_Mean_Val, group = 1), size = 1, color = "Black", linetype = "dashed")+
   guides(fill = guide_legend(title = "Condition")) +
   scale_fill_manual(values=c(light_no_ab_color, light_ab_color, dark_no_ab_color, dark_ab_color)) +
   scale_color_manual(values=c(light_no_ab_color, light_ab_color, dark_no_ab_color, dark_ab_color)) +
@@ -230,7 +243,13 @@ polar_still
 
 ```{r}
 
-speed_label_df <- tibble(Species = unique(school_data$Species),
+speed_no_out <- school_data %>% group_by(Ablation,Species) %>%
+                              filter(!is.na(School_Speed)) %>%
+                              filter(School_Speed >= median(School_Speed, nan.rm=T) - IQR(School_Speed,na.rm =T)*1.5 &
+                                     School_Speed <= median(School_Speed, nan.rm=T) + IQR(School_Speed,na.rm =T)*1.5) %>%
+                              ungroup()
+
+speed_label_df <- tibble(Species = unique(speed_no_out$Species),
                   Ablation = rep("No Ablation", 3),
                   group1 = rep("No Ablation", 3),
                   group2 = rep("Ablated", 3),
@@ -240,11 +259,11 @@ speed_still <- ggplot()+
   facet_wrap(~Species)+
   stat_pvalue_manual(speed_label_df, y.position = 6, step.increase = 0,
                      label = "p.signif", hide.ns = TRUE, bracket.size = 0.75, size = 7)+
-  stat_dots(school_data, mapping = aes(x = Ablation, y = School_Speed, color = Ablation, fill = Ablation),
+  stat_dots(speed_no_out, mapping = aes(x = Ablation, y = School_Speed, color = Ablation, fill = Ablation),
             side = "both", binwidth = unit(dot_binwidth, "npc"))+
-  geom_point(school_data, mapping = aes(x = Ablation, y = Speed_Mean_Val), size = 5, color = "Black")+
-  geom_line(school_data, mapping = aes(x = Ablation, y = Speed_Mean_Val, group = 1), size = 1, color = "Black", linetype = "dashed")+
-  geom_errorbar(school_data, mapping = aes(x = Ablation,ymin=Speed_Mean_Val-Speed_SD_Val, ymax=Speed_Mean_Val+Speed_SD_Val),
+  geom_point(speed_no_out, mapping = aes(x = Ablation, y = Speed_Mean_Val), size = 5, color = "Black")+
+  geom_line(speed_no_out, mapping = aes(x = Ablation, y = Speed_Mean_Val, group = 1), size = 1, color = "Black", linetype = "dashed")+
+  geom_errorbar(speed_no_out, mapping = aes(x = Ablation,ymin=Speed_Mean_Val-Speed_SD_Val, ymax=Speed_Mean_Val+Speed_SD_Val),
                 width=.2, color = "Black")+
   guides(fill = guide_legend(title = "Condition")) +
   scale_fill_manual(values=c(light_no_ab_color, light_ab_color, dark_no_ab_color, dark_ab_color)) +
@@ -286,7 +305,7 @@ all_fish_comp <- read.csv("Data/Fish_Raw_Points_3D.csv") %>% mutate(Flow = ifels
                            mutate(Ablation_Species = factor(paste(Ablation,Species,sep="/n")))
 
 # #Uncomment with new data, takes a long time to run just for graph edits
-# all_fish_comp_groups <- all_fish_comp %>% expand_grid(Group_Dist = seq(5,25,1)) %>%
+# all_fish_comp_groups <- all_fish_comp %>% expand_grid(Group_Dist = seq(0,15,0.2)) %>%
 #                                           group_by(Species, Ablation, Ablation_Species,
 #                                                    Year, Month, Day, Trial, Tailbeat, Frame, Group_Dist) %>%
 #                                           summarize(n_groups = get_n_groups(Head_X,Head_Y,Head_Z,Group_Dist)) %>%
@@ -297,11 +316,14 @@ all_fish_comp <- read.csv("Data/Fish_Raw_Points_3D.csv") %>% mutate(Flow = ifels
 #                                           ungroup() %>%
 # 
 #                                            # ### Used to remove every third point to reduce autocorrelation
-#                                            filter(Tailbeat %% 3 == 1) %>%
+#                                            #filter(Tailbeat %% 3 == 1) %>%
 #                                           na.omit()
+# 
 # saveRDS(all_fish_comp_groups, "all_fish_comp_groups.RDS")
 
 all_fish_comp_groups <- readRDS("all_fish_comp_groups.RDS")
+
+all_fish_comp_groups <- all_fish_comp_groups %>% filter(!(Species == "Giant Danio" & Group_Dist > 3))
 
 group_sum_data <- all_fish_comp_groups %>% filter(Groups > 0) %>% group_by(Ablation, Species, Groups, Group_Dist) %>%
                             summarise(count = n()) %>%
@@ -316,19 +338,37 @@ group_sum_data_1 <- group_sum_data %>% complete(Species,Ablation,Group_Dist,Grou
                                        ungroup() %>%
                                        filter(Groups == 1)
 
+group_sum_data_1 <- group_sum_data_1 %>% filter(!(Species == "Giant Danio" & Group_Dist > 3))
+
 group_sum_data_1_binom <- all_fish_comp_groups %>% mutate(Is_One = ifelse(Groups == 1, 1, 0))
 
-group_1_glm <- glm(Is_One ~ Ablation*Species*Group_Dist, data = group_sum_data_1_binom, family = "binomial")
+#group_1_glm <- glm(Is_One ~ Ablation*Species*Group_Dist, data = group_sum_data_1_binom, family = "binomial")
+group_1_glm <- glmmTMB(Is_One ~ Ablation*Species*Group_Dist + ar1(as.factor(Tailbeat) + 0|Trial:Species), 
+                             data = group_sum_data_1_binom, family = "binomial")
 group_1_aov <- Anova(group_1_glm, type=c("III"))
 group_1_aov
 
-group_still <- ggplot(group_sum_data_1, aes(Group_Dist, Percent_Group, color = Ablation))+
-  facet_wrap(~Species)+
+group_sum_data_1_trimmed <- group_sum_data_1 %>% filter(Species == "Giant Danio" | 
+                                                          (Species != "Giant Danio" & Group_Dist %% 1 == 0))%>%
+                                                          filter(Species != "Giant Danio" | 
+                                                          (Species == "Giant Danio" & Group_Dist <= 5))
+
+group_sum_data_1_binom_pred <- group_sum_data_1_binom %>% mutate(predVals = predict(group_1_glm, type="response")) %>%
+                                                          group_by(Ablation,Species,Group_Dist) %>%
+                                                          summarise(meanPredVals = mean(predVals)) %>%
+                                                          ungroup() %>% 
+                                                          filter(Species == "Giant Danio" | 
+                                                          (Species != "Giant Danio" & Group_Dist %% 1 == 0)) %>%
+                                                          filter(Species != "Giant Danio" | 
+                                                          (Species == "Giant Danio" & Group_Dist <= 5))
+
+group_still <- ggplot(group_sum_data_1_trimmed, aes(Group_Dist, Percent_Group, color = Ablation))+
+  facet_wrap(~Species, scales = "free")+
   geom_point()+
-  geom_line(data = group_sum_data_1_binom, aes(x = Group_Dist, y = predict(group_1_glm, type="response")), size = 1) + 
+  geom_line(data = group_sum_data_1_binom_pred, aes(x = Group_Dist, y = meanPredVals), size = 1) + 
   scale_color_manual(values = c(light_no_ab_color,light_ab_color,dark_no_ab_color,dark_ab_color)) +
   theme(legend.position = "none")+
-  xlab("Maximum Distance to Connect Group (cm)")+
+  xlab("Maximum Distance to Connect Group (BL)")+
   ylab("Proportion of Time in 1 Group")+
   scale_y_continuous(breaks = seq(0,1,0.25), limits = c(0,1))+
   theme_light()+
@@ -361,7 +401,7 @@ neuromast_counts <- read.csv("Data/neuromast_counts.csv") %>%
                            All.Superficial = Superficial.Above.LL+Superficial.Below.LL+Superficial.Head+
                                              Superficial.LL.Scales+Superficial.Operculum+Superficial.Tailfin,
                            All.Superficial.Area = All.Superficial/Area,
-                           Canal.Neuromast.Area = Canal.Neuromast/Area,
+                           Canal.Neuromast.Length = Canal.Neuromast/Length,
                            Head.Superficial.Area = (Superficial.Head+Superficial.Operculum)/Area,
                            Body.Superficial.Area = (Superficial.Above.LL+Superficial.Below.LL+
                                                       Superficial.LL.Scales++Superficial.Tailfin)/Area)
@@ -375,9 +415,9 @@ neuromast_per_area <- neuromast_counts %>% group_by(Fish) %>%
                                           summarise(All.Superficial.Area = All.Superficial.Area,
                                                     All.Superficial.Area.Mean = mean(All.Superficial.Area),
                                                     All.Superficial.Area.SD = sd(All.Superficial.Area),
-                                                    Canal.Neuromast.Area = Canal.Neuromast.Area,
-                                                    Canal.Neuromast.Area.Mean = mean(Canal.Neuromast.Area),
-                                                    Canal.Neuromast.Area.SD = sd(Canal.Neuromast.Area),
+                                                    Canal.Neuromast.Length = Canal.Neuromast.Length,
+                                                    Canal.Neuromast.Length.Mean = mean(Canal.Neuromast.Length),
+                                                    Canal.Neuromast.Length.SD = sd(Canal.Neuromast.Length),
                                                     Head.Superficial.Area = Head.Superficial.Area,
                                                     Head.Superficial.Area.Mean = mean(Head.Superficial.Area),
                                                     Head.Superficial.Area.SD = sd(Head.Superficial.Area),
@@ -405,19 +445,19 @@ total_super <- ggplot(neuromast_per_area, aes(x = Fish, y = All.Superficial.Area
         axis.title.y = element_text(size = text_size),
         strip.text.x = element_text(size = text_size))
 
-total_canal <- ggplot(neuromast_per_area, aes(x = Fish, y = Canal.Neuromast.Area, color = Fish, fill = Fish))+
+total_canal <- ggplot(neuromast_per_area, aes(x = Fish, y = Canal.Neuromast.Length, color = Fish, fill = Fish))+
   stat_dots(side = "both", binwidth = unit(dot_binwidth, "npc")) +
-  geom_point(aes(y = Canal.Neuromast.Area.Mean), color = "black")+
-  geom_errorbar(aes(ymin=Canal.Neuromast.Area.Mean-Canal.Neuromast.Area.SD,
-                    ymax=Canal.Neuromast.Area.Mean+Canal.Neuromast.Area.SD), width=.2, color = "black")+
-  ylab("Canal Neuromasts per cm^2")+
+  geom_point(aes(y = Canal.Neuromast.Length.Mean), color = "black")+
+  geom_errorbar(aes(ymin=Canal.Neuromast.Length.Mean-Canal.Neuromast.Length.SD,
+                    ymax=Canal.Neuromast.Length.Mean+Canal.Neuromast.Length.SD), width=.2, color = "black")+
+  ylab("Canal Neuromasts per cm")+
   theme_classic()+
   xlab("")+
-  ylim(0,40)+
+  ylim(0,20)+
   theme(legend.position = "none") +
-  stat_compare_means(comparisons = list(c("Cherry Barb", "Neon Tetra"),
-                                        c("Cherry Barb", "Giant Danio")), bracket.size = 0.75, size = 7,
-                     method = "t.test", label = "p.signif", hide.ns = TRUE, label.y = c(33,37)) +
+  stat_compare_means(comparisons = list(c("Giant Danio", "Neon Tetra"),
+                                        c("Cherry Barb", "Neon Tetra")), bracket.size = 0.75, size = 7,
+                     method = "t.test", label = "p.signif", hide.ns = TRUE, label.y = c(17,19)) +
   theme(axis.text.x = element_text(size = text_size),
         axis.text.y = element_text(size = text_size),
         axis.title.x = element_text(size = text_size),
