@@ -114,7 +114,6 @@ school_data <- school_data %>% mutate(Flow = ifelse(Flow == "0", "Still Water", 
                            mutate(Date = paste(Year,Month,Day,sep="_"),
                                   Date_Trial = paste(Year,Month,Day,Trial,sep="_")) %>%
                            group_by(Date_Trial) %>%
-                           #filter(row_number() %% 2 == 1) %>%
                            ungroup()
 
 table(school_data$Species, school_data$Trial)
@@ -167,11 +166,17 @@ group_sum_data_1_binom <- all_fish_comp_groups %>% mutate(Is_One = ifelse(Groups
 
 ```{r}
 
+nnd_no_out <- school_data %>% group_by(Ablation,Species) %>%
+                              filter(!is.na(NND)) %>%
+                              filter(NND >= median(NND, nan.rm=T) - IQR(NND,na.rm =T)*1.5 &
+                                     NND <= median(NND, nan.rm=T) + IQR(NND,na.rm =T)*1.5) %>%
+                              ungroup()
+
 #nnd_lmer_still <- lm(NND ~ Ablation*Species + Trial, data = school_data)
 nnd_lmer_still <- lme(NND ~ Ablation*Species, 
                              random = ~1|Trial/Species,
                              correlation = corAR1(form = ~1|Trial/Species), 
-                             data = school_data)
+                             data = nnd_no_out)
 nnd_s_aov_me <- Anova(nnd_lmer_still, type=c("III"))
 em_out <- summary(emmeans(nnd_lmer_still, pairwise ~ Ablation*Species))$contrasts$p.value
 names(em_out) <- contrast_names
@@ -181,16 +186,22 @@ plot(nnd_lmer_still)
 qqnorm(resid(nnd_lmer_still))
 qqline(resid(nnd_lmer_still))
 
-ggplot(school_data, aes(Trial, NND, color = interaction(Ablation,Species)))+
+ggplot(nnd_no_out, aes(Trial, NND, color = interaction(Ablation,Species)))+
   geom_point()+
   geom_line(aes(y = predict(nnd_lmer_still)))+
   theme_classic()
+
+polar_no_out <- school_data %>% group_by(Ablation,Species) %>%
+                              filter(!is.na(School_Polar)) %>%
+                              filter(School_Polar >= median(School_Polar, nan.rm=T) - IQR(School_Polar,na.rm =T)*1.5 &
+                                     School_Polar <= median(School_Polar, nan.rm=T) + IQR(School_Polar,na.rm =T)*1.5) %>%
+                              ungroup()
 
 #polar_lmer_still <- lm(School_Polar ~ Ablation*Species + Trial, data = school_data)
 polar_lmer_still <- lme(School_Polar ~ Ablation*Species, 
                              random = ~1|Trial/Species,
                              correlation = corAR1(form = ~1|Trial/Species), 
-                             data = school_data)
+                             data = polar_no_out)
 polar_s_aov_me <- Anova(polar_lmer_still, type=c("III"))
 em_out <- summary(emmeans(polar_lmer_still, pairwise ~ Ablation*Species))$contrasts$p.value
 names(em_out) <- contrast_names
@@ -200,11 +211,17 @@ plot(polar_lmer_still)
 qqnorm(resid(polar_lmer_still))
 qqline(resid(polar_lmer_still))
 
+speed_no_out <- school_data %>% group_by(Ablation,Species) %>%
+                              filter(!is.na(School_Speed)) %>%
+                              filter(School_Speed >= median(School_Speed, nan.rm=T) - IQR(School_Speed,na.rm =T)*1.5 &
+                                     School_Speed <= median(School_Speed, nan.rm=T) + IQR(School_Speed,na.rm =T)*1.5) %>%
+                              ungroup()
+
 #speed_lmer_still <- lm(School_Speed ~ Ablation*Species + Trial, data = school_data)
 speed_lmer_still <- lme(School_Speed ~ Ablation*Species, 
                              random = ~1|Trial/Species,
                              correlation = corAR1(form = ~1|Trial/Species), 
-                             data = school_data)
+                             data = speed_no_out)
 speed_s_aov_me <- Anova(speed_lmer_still, type=c("III"))
 em_out <- summary(emmeans(speed_lmer_still, pairwise ~ Ablation*Species))$contrasts$p.value
 names(em_out) <- contrast_names
@@ -256,48 +273,79 @@ within_species_difference <- function(resp_var,base_formula, df, species){
   no_ab_form <- paste0(resp_var," ~ ",base_formula)
   ab_form <- paste0(resp_var," ~ Ablation+",base_formula)
   
-  group_1_no_ab <- lm(formula(no_ab_form), data = df %>% filter(Species == species))
-  group_1_yes_ab <- lm(formula(ab_form), data = df %>% filter(Species == species))
+  group_1_no_ab <- lme(formula(no_ab_form),
+                        random = ~1|Trial,
+                        correlation = corAR1(form = ~1|Trial),
+                        data = df  %>% filter(Species == species))
+  group_1_yes_ab <-  lme(formula(ab_form),
+                        random = ~1|Trial,
+                        correlation = corAR1(form = ~1|Trial),
+                        data = df  %>% filter(Species == species))
+  
+  # group_1_no_ab <- lm(formula(no_ab_form), data = df %>% filter(Species == species))
+  # group_1_yes_ab <- lm(formula(ab_form), data = df %>% filter(Species == species))
   
   best_model <- rownames(AIC(group_1_yes_ab,group_1_no_ab) %>% arrange(AIC))[1]
+  print(best_model)
+  
+  if(best_model == "group_1_yes_ab"){
+    BM = "With Ablation"
+  } else{
+    BM = "Without Ablation"
+  }
+  
   chi <- lrtest(group_1_yes_ab,group_1_no_ab)$Chisq[2]
   p_val <- lrtest(group_1_yes_ab,group_1_no_ab)$"Pr(>Chisq)"[2]
   
-  return(tibble(ChiSqr = chi, PVal = p_val))
+  return(tibble(Best_Model = BM, ChiSqr = chi, PVal = p_val))
 }
 
 within_species_difference_binom <- function(resp_var,base_formula, df, species){
-  no_ab_form <- paste0(resp_var," ~ Group_Dist+",base_formula)
-  ab_form <- paste0(resp_var," ~ Ablation*Group_Dist+",base_formula)
+  no_ab_form <- paste0(resp_var," ~ Group_Dist+",base_formula,"+ar1(as.factor(Tailbeat) + 0|Trial)")
+  ab_form <- paste0(resp_var," ~ Ablation*Group_Dist+",base_formula,"+ar1(as.factor(Tailbeat) + 0|Trial)")
   
-  group_1_no_ab <- glm(formula(no_ab_form), data = df %>% filter(Species == species), family = "binomial")
-  group_1_yes_ab <- glm(formula(ab_form), data = df %>% filter(Species == species), family = "binomial")
+  group_1_no_ab <- glmmTMB(formula(no_ab_form), 
+                             data = df %>% filter(Species == species), family = "binomial")
+  group_1_yes_ab <-  glmmTMB(formula(ab_form), 
+                             data = df %>% filter(Species == species), family = "binomial")
+  
+  # group_1_no_ab <- glm(formula(no_ab_form), data = df %>% filter(Species == species), family = "binomial")
+  # group_1_yes_ab <- glm(formula(ab_form), data = df %>% filter(Species == species), family = "binomial")
   
   best_model <- rownames(AIC(group_1_yes_ab,group_1_no_ab) %>% arrange(AIC))[1]
+  
+  if(best_model == "group_1_yes_ab"){
+    BM = "With Ablation"
+  } else{
+    BM = "Without Ablation"
+  }
+  
   chi <- lrtest(group_1_yes_ab,group_1_no_ab)$Chisq[2]
   p_val <- lrtest(group_1_yes_ab,group_1_no_ab)$"Pr(>Chisq)"[2]
   
-  return(tibble(ChiSqr = chi, PVal = p_val))
+  return(tibble(Best_Model = BM, ChiSqr = chi, PVal = p_val))
 }
 
-nnd_contrasts <- rbind(within_species_difference("NND","Trial",school_data,"Giant Danio"),
-                   within_species_difference("NND","Trial",school_data,"Cherry Barb"),
-                   within_species_difference("NND","Trial",school_data,"Neon Tetra"))
+nnd_contrasts <- rbind(within_species_difference("NND","1",nnd_no_out,"Giant Danio"),
+                   within_species_difference("NND","1",nnd_no_out,"Cherry Barb"),
+                   within_species_difference("NND","1",nnd_no_out,"Neon Tetra"))
 
-polar_contrasts <- rbind(within_species_difference("School_Polar","Trial",school_data,"Giant Danio"),
-                     within_species_difference("School_Polar","Trial",school_data,"Cherry Barb"),
-                     within_species_difference("School_Polar","Trial",school_data,"Neon Tetra"))
+polar_contrasts <- rbind(within_species_difference("School_Polar","1",polar_no_out,"Giant Danio"),
+                     within_species_difference("School_Polar","1",polar_no_out,"Cherry Barb"),
+                     within_species_difference("School_Polar","1",polar_no_out,"Neon Tetra"))
 
-speed_contrasts <- rbind(within_species_difference("School_Speed","Trial",school_data,"Giant Danio"),
-                     within_species_difference("School_Speed","Trial",school_data,"Cherry Barb"),
-                     within_species_difference("School_Speed","Trial",school_data,"Neon Tetra"))
+speed_contrasts <- rbind(within_species_difference("School_Speed","1",speed_no_out,"Giant Danio"),
+                     within_species_difference("School_Speed","1",speed_no_out,"Cherry Barb"),
+                     within_species_difference("School_Speed","1",speed_no_out,"Neon Tetra"))
 
-groups_contrasts <- rbind(within_species_difference("Is_One","Trial",group_sum_data_1_binom,"Giant Danio"),
-                          within_species_difference("Is_One","Trial",group_sum_data_1_binom,"Cherry Barb"),
-                          within_species_difference("Is_One","Trial",group_sum_data_1_binom,"Neon Tetra"))
+groups_contrasts <- rbind(within_species_difference("Is_One","1",group_sum_data_1_binom,"Giant Danio"),
+                          within_species_difference("Is_One","1",group_sum_data_1_binom,"Cherry Barb"),
+                          within_species_difference("Is_One","1",group_sum_data_1_binom,"Neon Tetra"))
 
 school_ablation_stats_table <- tibble(Stat = c(rep("NND",3),rep("Polarization",3),rep("Speed",3),rep("Groups",3)),
        Species = rep(c("Giant Danio","Cherry Barb","Neon Tetra"), 4),
+       # Best_Model = c(nnd_contrasts$Best_Model,polar_contrasts$Best_Model,
+       #           speed_contrasts$Best_Model,groups_contrasts$Best_Model),
        X2 = round(c(nnd_contrasts$ChiSqr,polar_contrasts$ChiSqr,
                  speed_contrasts$ChiSqr,groups_contrasts$ChiSqr),2),
        P_Val = round(p.adjust(c(nnd_contrasts$PVal,polar_contrasts$PVal,
@@ -316,16 +364,18 @@ saveRDS(school_ablation_stats_table,"Paper Tables/species_comp_table.RDS")
 ```{r}
 
 neuromast_counts <- read.csv("Data/neuromast_counts.csv") %>%
-                    select(-c(x,y,survey.id)) %>%
+                    dplyr::select(-c(x,y,survey.id)) %>%
                     separate(image, c("Fish","ID"), sep = "_") %>%
                     mutate(Fish = case_when(Fish == "GD" ~ "Giant Danio",
                                             Fish == "CB" ~ "Cherry Barb",
                                             Fish == "NT" ~ "Neon Tetra")) %>%
+                    mutate(Fish = fct_relevel(Fish, c("Giant Danio","Cherry Barb", "Neon Tetra"))) %>%
                     mutate(ID = gsub(".jpg", "", ID),
                            All.Superficial = Superficial.Above.LL+Superficial.Below.LL+Superficial.Head+
                                              Superficial.LL.Scales+Superficial.Operculum+Superficial.Tailfin,
                            All.Superficial.Area = All.Superficial/Area,
-                           Canal.Neuromast.Length = Canal.Neuromast/Length,
+                           Head.Canal.Neuromast.Length = Canal.Head/Length,
+                           Canal.Neuromast.Length = (Canal.Neuromast-Canal.Head)/Length,
                            Head.Superficial.Area = (Superficial.Head+Superficial.Operculum)/Area,
                            Body.Superficial.Area = (Superficial.Above.LL+Superficial.Below.LL+
                                                       Superficial.LL.Scales++Superficial.Tailfin)/Area)
@@ -335,22 +385,23 @@ neuromast_counts <- read.csv("Data/neuromast_counts.csv") %>%
 
 ```{r}
 
-neuromast_per_area <- neuromast_counts %>% group_by(Fish) %>%
-                                          summarise(All.Superficial.Area = All.Superficial.Area,
-                                                    Canal.Neuromast.Length = Canal.Neuromast.Length,
-                                                    Head.Superficial.Area = Head.Superficial.Area,
-                                                    Body.Superficial.Area = Body.Superficial.Area)
+# superfical_aov <- aov(All.Superficial.Area ~ Fish, data = neuromast_counts)
+# superfical_tukey <- TukeyHSD(superfical_aov)
 
-superfical_aov <- aov(All.Superficial.Area ~ Fish, data = neuromast_counts)
-superfical_tukey <- TukeyHSD(superfical_aov)
+canal_head_aov <- aov(Head.Canal.Neuromast.Length ~ Fish, data = neuromast_counts)
+canal_head_tukey <- TukeyHSD(canal_head_aov)
+canal_head_tukey
 
 canal_aov <- aov(Canal.Neuromast.Length ~ Fish, data = neuromast_counts)
 canal_tukey <- TukeyHSD(canal_aov)
+canal_tukey
 
 head_superficial_aov <- aov(Head.Superficial.Area ~ Fish, data = neuromast_counts)
 head_superficial_tukey <- TukeyHSD(head_superficial_aov)
+head_superficial_tukey
 
 body_superficial_aov <- aov(Body.Superficial.Area ~ Fish, data = neuromast_counts)
 body_superficial_tukey <- TukeyHSD(body_superficial_aov)
+body_superficial_tukey
 
 ```

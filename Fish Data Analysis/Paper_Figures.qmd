@@ -167,11 +167,11 @@ nnd_label_df <- tibble(Species = unique(nnd_no_out$Species),
                   Ablation = rep("No Ablation", 3),
                   group1 = rep("No Ablation", 3),
                   group2 = rep("Ablated", 3),
-                  p.signif = c("ns","**","*"))
+                  p.signif = c("ns","*","***"))
 
 nnd_still <- ggplot()+
   facet_wrap(~Species)+
-  stat_pvalue_manual(nnd_label_df, y.position = 5.75, step.increase = 0,
+  stat_pvalue_manual(nnd_label_df, y.position = 5.05, step.increase = 0,
                      label = "p.signif", hide.ns = TRUE, bracket.size = 0.75, size = 7)+
   stat_dots(nnd_no_out, mapping = aes(x = Ablation, y = NND, color = Ablation, fill = Ablation),
             side = "both", binwidth = unit(dot_binwidth, "npc"))+
@@ -185,7 +185,7 @@ nnd_still <- ggplot()+
   xlab("") +
   ylab("School NND (BL)") +
   theme_light()+ 
-  ylim(0,6)+
+  ylim(0,5.5)+
   theme(legend.position = "none") +
   theme(axis.text.x = element_text(size = text_size),
         axis.text.y = element_text(size = text_size),
@@ -210,7 +210,7 @@ polar_label_df <- tibble(Species = unique(polar_no_out$Species),
                   Ablation = rep("No Ablation", 3),
                   group1 = rep("No Ablation", 3),
                   group2 = rep("Ablated", 3),
-                  p.signif = c("ns","*","****"))
+                  p.signif = c("ns","ns","ns"))
 
 polar_still <- ggplot()+
   facet_wrap(~Species)+
@@ -253,11 +253,11 @@ speed_label_df <- tibble(Species = unique(speed_no_out$Species),
                   Ablation = rep("No Ablation", 3),
                   group1 = rep("No Ablation", 3),
                   group2 = rep("Ablated", 3),
-                  p.signif = c("ns","****","****"))
+                  p.signif = c("*","****","****"))
 
 speed_still <- ggplot()+
   facet_wrap(~Species)+
-  stat_pvalue_manual(speed_label_df, y.position = 6, step.increase = 0,
+  stat_pvalue_manual(speed_label_df, y.position = 5.5, step.increase = 0,
                      label = "p.signif", hide.ns = TRUE, bracket.size = 0.75, size = 7)+
   stat_dots(speed_no_out, mapping = aes(x = Ablation, y = School_Speed, color = Ablation, fill = Ablation),
             side = "both", binwidth = unit(dot_binwidth, "npc"))+
@@ -272,7 +272,7 @@ speed_still <- ggplot()+
   ylab("Mean Speed of Fish (BL/s)") +
   theme_light()+ 
   theme(legend.position = "none") +
-  ylim(0,7)+
+  ylim(0,5.75)+
   theme(axis.text.x = element_text(size = text_size),
         axis.text.y = element_text(size = text_size),
         axis.title.y = element_text(size = text_size),
@@ -293,6 +293,7 @@ school_stats_mega_plot <- ggarrange(nnd_still,
 school_stats_mega_plot
 
 ggsave("Paper Figures/Figure 2.png", school_stats_mega_plot, width = 10, height = 20)
+ggsave("Paper Figures/Figure 2.pdf", school_stats_mega_plot, width = 10, height = 20)
 ```
 
 ### Number of Groups
@@ -382,6 +383,7 @@ group_still <- ggplot(group_sum_data_1_trimmed, aes(Group_Dist, Percent_Group, c
 group_still
 
 ggsave("Paper Figures/Subgroup_Graphs.png", group_still, width = 10, height = 7)
+ggsave("Paper Figures/Subgroup_Graphs.pdf", group_still, width = 10, height = 7)
 
 ```
 
@@ -401,7 +403,8 @@ neuromast_counts <- read.csv("Data/neuromast_counts.csv") %>%
                            All.Superficial = Superficial.Above.LL+Superficial.Below.LL+Superficial.Head+
                                              Superficial.LL.Scales+Superficial.Operculum+Superficial.Tailfin,
                            All.Superficial.Area = All.Superficial/Area,
-                           Canal.Neuromast.Length = Canal.Neuromast/Length,
+                           Head.Canal.Neuromast.Length = Canal.Head/Length,
+                           Canal.Neuromast.Length = (Canal.Neuromast-Canal.Head)/Length,
                            Head.Superficial.Area = (Superficial.Head+Superficial.Operculum)/Area,
                            Body.Superficial.Area = (Superficial.Above.LL+Superficial.Below.LL+
                                                       Superficial.LL.Scales++Superficial.Tailfin)/Area)
@@ -415,6 +418,9 @@ neuromast_per_area <- neuromast_counts %>% group_by(Fish) %>%
                                           summarise(All.Superficial.Area = All.Superficial.Area,
                                                     All.Superficial.Area.Mean = mean(All.Superficial.Area),
                                                     All.Superficial.Area.SD = sd(All.Superficial.Area),
+                                                    Head.Canal.Neuromast.Length = Head.Canal.Neuromast.Length,
+                                                    Head.Canal.Neuromast.Length.Mean = mean(Head.Canal.Neuromast.Length),
+                                                    Head.Canal.Neuromast.Length.SD = sd(Head.Canal.Neuromast.Length),
                                                     Canal.Neuromast.Length = Canal.Neuromast.Length,
                                                     Canal.Neuromast.Length.Mean = mean(Canal.Neuromast.Length),
                                                     Canal.Neuromast.Length.SD = sd(Canal.Neuromast.Length),
@@ -427,16 +433,34 @@ neuromast_per_area <- neuromast_counts %>% group_by(Fish) %>%
 
 my_comparisons = list(c("Cherry Barb", "Giant Danio"),c("Cherry Barb", "Neon Tetra"),c("Giant Danio", "Neon Tetra"))
 
-total_super <- ggplot(neuromast_per_area, aes(x = Fish, y = All.Superficial.Area, color = Fish, fill = Fish))+
+# total_super <- ggplot(neuromast_per_area, aes(x = Fish, y = All.Superficial.Area, color = Fish, fill = Fish))+
+#   stat_dots(side = "both", binwidth = unit(dot_binwidth, "npc")) +
+#   geom_point(aes(y = All.Superficial.Area.Mean), color = "black")+
+#   geom_errorbar(aes(ymin=All.Superficial.Area.Mean-All.Superficial.Area.SD,
+#                     ymax=All.Superficial.Area.Mean+All.Superficial.Area.SD), width=.2, color = "black")+
+#   ylab("Superficial Neuromasts per cm^2")+
+#   theme_classic()+
+#   xlab("")+
+#   ylim(0,2000)+
+#   stat_compare_means(comparisons = my_comparisons, method = "t.test", label.y = c(1500,1700,1900),
+#                      label = "p.signif", hide.ns = TRUE, bracket.size = 0.75, size = 7) +
+#   theme(legend.position = "none") +
+#   theme(axis.text.x = element_text(size = text_size),
+#         axis.text.y = element_text(size = text_size),
+#         axis.title.x = element_text(size = text_size),
+#         axis.title.y = element_text(size = text_size),
+#         strip.text.x = element_text(size = text_size))
+
+head_canal <- ggplot(neuromast_per_area, aes(x = Fish, y = Head.Canal.Neuromast.Length, color = Fish, fill = Fish))+
   stat_dots(side = "both", binwidth = unit(dot_binwidth, "npc")) +
-  geom_point(aes(y = All.Superficial.Area.Mean), color = "black")+
-  geom_errorbar(aes(ymin=All.Superficial.Area.Mean-All.Superficial.Area.SD,
-                    ymax=All.Superficial.Area.Mean+All.Superficial.Area.SD), width=.2, color = "black")+
-  ylab("Superficial Neuromasts per cm^2")+
+  geom_point(aes(y = Head.Canal.Neuromast.Length.Mean), color = "black")+
+  geom_errorbar(aes(ymin=Head.Canal.Neuromast.Length.Mean-Head.Canal.Neuromast.Length.SD,
+                    ymax=Head.Canal.Neuromast.Length.Mean+Head.Canal.Neuromast.Length.SD), width=.2, color = "black")+
+  ylab("Head Canal Neuromasts per cm")+
   theme_classic()+
   xlab("")+
-  ylim(0,2000)+
-  stat_compare_means(comparisons = my_comparisons, method = "t.test", label.y = c(1500,1700,1900),
+  ylim(0,10)+
+  stat_compare_means(comparisons = list(c("Cherry Barb", "Neon Tetra")), method = "t.test", label.y = c(9),
                      label = "p.signif", hide.ns = TRUE, bracket.size = 0.75, size = 7) +
   theme(legend.position = "none") +
   theme(axis.text.x = element_text(size = text_size),
@@ -445,19 +469,19 @@ total_super <- ggplot(neuromast_per_area, aes(x = Fish, y = All.Superficial.Area
         axis.title.y = element_text(size = text_size),
         strip.text.x = element_text(size = text_size))
 
-total_canal <- ggplot(neuromast_per_area, aes(x = Fish, y = Canal.Neuromast.Length, color = Fish, fill = Fish))+
+body_canal <- ggplot(neuromast_per_area, aes(x = Fish, y = Canal.Neuromast.Length, color = Fish, fill = Fish))+
   stat_dots(side = "both", binwidth = unit(dot_binwidth, "npc")) +
   geom_point(aes(y = Canal.Neuromast.Length.Mean), color = "black")+
   geom_errorbar(aes(ymin=Canal.Neuromast.Length.Mean-Canal.Neuromast.Length.SD,
                     ymax=Canal.Neuromast.Length.Mean+Canal.Neuromast.Length.SD), width=.2, color = "black")+
-  ylab("Canal Neuromasts per cm")+
+  ylab("Trunk Canal Neuromasts per cm")+
   theme_classic()+
   xlab("")+
-  ylim(0,20)+
+  ylim(0,13)+
   theme(legend.position = "none") +
   stat_compare_means(comparisons = list(c("Giant Danio", "Neon Tetra"),
                                         c("Cherry Barb", "Neon Tetra")), bracket.size = 0.75, size = 7,
-                     method = "t.test", label = "p.signif", hide.ns = TRUE, label.y = c(17,19)) +
+                     method = "t.test", label = "p.signif", hide.ns = TRUE, label.y = c(10,12)) +
   theme(axis.text.x = element_text(size = text_size),
         axis.text.y = element_text(size = text_size),
         axis.title.x = element_text(size = text_size),
@@ -501,8 +525,8 @@ body_super <- ggplot(neuromast_per_area, aes(x = Fish, y = Body.Superficial.Area
         strip.text.x = element_text(size = text_size))
 
 
-neuromast_mega_plot <- ggarrange(total_super, 
-                                    total_canal,
+neuromast_mega_plot <- ggarrange(head_canal,
+                                    body_canal,
                                     head_super,
                                     body_super,
           labels = c("A", "B", "C", "D"),
@@ -511,6 +535,6 @@ neuromast_mega_plot <- ggarrange(total_super,
 neuromast_mega_plot
 
 ggsave("Paper Figures/neuromast_figures.png", neuromast_mega_plot, width = 10, height = 10)
-
+ggsave("Paper Figures/neuromast_figures.pdf", neuromast_mega_plot, width = 10, height = 10)
 
 ```
