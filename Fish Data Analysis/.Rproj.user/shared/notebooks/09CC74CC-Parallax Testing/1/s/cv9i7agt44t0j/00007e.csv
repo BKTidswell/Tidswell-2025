@@ -1,5 +1,0 @@
-"0",""
-"0","ggplot(merged_data, aes(x = Fish_Mid_X, y = Fish_Mid_Y, z = Distance_Diff))+"
-"0","  stat_summary_2d(bins = 20, fun = mean) +"
-"0","  scale_fill_viridis() +"
-"0","  theme_classic()"

@@ -1,9 +1,0 @@
-"0","```r
-heading_gam <- gam(Heading_Diff ~ s(Distance)+s(Angle)+s(Distance,Angle)+
-                              Flow+s(Distance,by=Flow)+s(Angle,by=Flow)+s(Distance,Angle,by=Flow)+
-                              Darkness+s(Distance,by=Darkness)+s(Angle,by=Darkness)+s(Distance,Angle,by=Darkness)+
-                              Ablation+s(Distance,by=Ablation)+s(Angle,by=Ablation)+s(Distance,Angle,by=Ablation),
-                              data = comp_data %>% mutate(Flow = as.factor(Flow),
-                                                          Darkness = as.factor(Darkness),
-                                                          Ablation = as.factor(Ablation)))
-```"

@@ -22,8 +22,8 @@ library(MASS)
 library(rstatix)
 library(nlme)
 library(glmmTMB)
+library(patchwork)
 ```
-
 
 ## Functions and Variables
 
@@ -54,14 +54,18 @@ flow_split_flow = "#5DD492"
 dark_split_light = "#5e94d4"
 dark_split_dark = "#011627"
 
+fish_colors = c('Giant Danio'='#666699', 'Cherry Barb'='#e23354', 'Neon Tetra'='#66cc00')
+
 tailbeat_len = 19
 
 allowed_flow_type = c("Still Water","Flowing Water (2 BL/s)")
 
-dot_binwidth = 0.011
+dot_binwidth = 0.022
+neuromast_dot_binwidth = 0.04
 
-text_size = 16
+text_size = 10
 sig_text_size = 6
+star_size = 6
 
 # for turning data
 x_offset <- 1.95
@@ -92,8 +96,6 @@ get_n_groups <- function(HeadX, HeadY, HeadZ, gDist){
   return(components(g)$no)
 }
 ```
-
-
 
 ```{r}
 
@@ -151,9 +153,13 @@ school_data <- school_data %>% mutate(Flow = ifelse(Flow == "0", "Still Water", 
                            ungroup()
 ```
 
-
-
 ### NND Plot
+
+```{r}
+school_data <-
+  school_data |> 
+  mutate(Ablation = fct_recode(Ablation, Control = "No Ablation"))
+```
 
 ```{r}
 
@@ -164,33 +170,28 @@ nnd_no_out <- school_data %>% group_by(Ablation,Species) %>%
                               ungroup()
 
 nnd_label_df <- tibble(Species = unique(nnd_no_out$Species),
-                  Ablation = rep("No Ablation", 3),
-                  group1 = rep("No Ablation", 3),
-                  group2 = rep("Ablated", 3),
-                  p.signif = c("ns","*","***"))
+                       xstar = c(1.5, 1.5, 1.5),
+                       ystar = c(1.2, 2.1, 2.3),
+                       p.signif = c(NA,"*","***"))
 
 nnd_still <- ggplot()+
   facet_wrap(~Species)+
-  stat_pvalue_manual(nnd_label_df, y.position = 5.05, step.increase = 0,
-                     label = "p.signif", hide.ns = TRUE, bracket.size = 0.75, size = 7)+
   stat_dots(nnd_no_out, mapping = aes(x = Ablation, y = NND, color = Ablation, fill = Ablation),
             side = "both", binwidth = unit(dot_binwidth, "npc"))+
-  geom_point(nnd_no_out, mapping = aes(x = Ablation, y = NND_Mean_Val), size = 5, color = "Black")+
+  geom_point(nnd_no_out, mapping = aes(x = Ablation, y = NND_Mean_Val), size = 2, color = "Black", shape=5)+
   geom_errorbar(nnd_no_out, mapping = aes(x = Ablation,ymin=NND_Mean_Val-NND_SD_Val, ymax=NND_Mean_Val+NND_SD_Val),
-                width=.2, color = "Black")+
+                width=.4, color = "Black")+
     geom_line(nnd_no_out, mapping = aes(x = Ablation, y = NND_Mean_Val, group = 1), size = 1, color = "Black", linetype = "dashed")+
+  geom_text(data = nnd_label_df, aes(x = xstar, y = ystar, label = p.signif), hjust = 'center',
+            vjust = 'center', size = star_size)+
   guides(fill = guide_legend(title = "Condition")) +
   scale_fill_manual(values=c(light_no_ab_color, light_ab_color, dark_no_ab_color, dark_ab_color)) +
   scale_color_manual(values=c(light_no_ab_color, light_ab_color, dark_no_ab_color, dark_ab_color)) +
   xlab("") +
   ylab("School NND (BL)") +
-  theme_light()+ 
-  ylim(0,5.5)+
+  theme_light(base_size = text_size)+ 
+  ylim(0,5)+
   theme(legend.position = "none") +
-  theme(axis.text.x = element_text(size = text_size),
-        axis.text.y = element_text(size = text_size),
-        axis.title.y = element_text(size = text_size),
-        strip.text.x = element_text(size = text_size))+
   scale_x_discrete(labels=function(x){sub(",\\s", "\n", x)})
 
 nnd_still
@@ -207,33 +208,27 @@ polar_no_out <- school_data %>% group_by(Ablation,Species) %>%
                               ungroup()
 
 polar_label_df <- tibble(Species = unique(polar_no_out$Species),
-                  Ablation = rep("No Ablation", 3),
-                  group1 = rep("No Ablation", 3),
+                  Ablation = rep("Control", 3),
+                  group1 = rep("Control", 3),
                   group2 = rep("Ablated", 3),
                   p.signif = c("ns","ns","ns"))
 
 polar_still <- ggplot()+
   facet_wrap(~Species)+
-  stat_pvalue_manual(polar_label_df, y.position = 0.98, step.increase = 0,
-                     label = "p.signif", hide.ns = TRUE, bracket.size = 0.75, size = 7)+
   stat_dots(polar_no_out, mapping = aes(x = Ablation, y = School_Polar, color = Ablation, fill = Ablation),
             side = "both", binwidth = unit(dot_binwidth, "npc"))+
-  geom_point(polar_no_out, mapping = aes(x = Ablation, y = Polar_Mean_Val), size = 5, color = "Black")+
+  geom_point(polar_no_out, mapping = aes(x = Ablation, y = Polar_Mean_Val), size = 2, color = "Black", shape=5)+
   geom_errorbar(polar_no_out, mapping = aes(x = Ablation,ymin=Polar_Mean_Val-Polar_SD_Val, ymax=Polar_Mean_Val+Polar_SD_Val),
-                width=.2, color = "Black")+
+                width=.4, color = "Black")+
   geom_line(polar_no_out, mapping = aes(x = Ablation, y = Polar_Mean_Val, group = 1), size = 1, color = "Black", linetype = "dashed")+
   guides(fill = guide_legend(title = "Condition")) +
   scale_fill_manual(values=c(light_no_ab_color, light_ab_color, dark_no_ab_color, dark_ab_color)) +
   scale_color_manual(values=c(light_no_ab_color, light_ab_color, dark_no_ab_color, dark_ab_color)) +
   xlab("") +
   ylab("Polarization") +
-  theme_light()+ 
+  theme_light(base_size = text_size)+ 
   theme(legend.position = "none") +
   ylim(0,1)+
-  theme(axis.text.x = element_text(size = text_size),
-        axis.text.y = element_text(size = text_size),
-        axis.title.y = element_text(size = text_size),
-        strip.text.x = element_text(size = text_size))+
   scale_x_discrete(labels=function(x){sub(",\\s", "\n", x)})
 
 polar_still
@@ -250,38 +245,46 @@ speed_no_out <- school_data %>% group_by(Ablation,Species) %>%
                               ungroup()
 
 speed_label_df <- tibble(Species = unique(speed_no_out$Species),
-                  Ablation = rep("No Ablation", 3),
-                  group1 = rep("No Ablation", 3),
-                  group2 = rep("Ablated", 3),
-                  p.signif = c("*","****","****"))
+                         xstar = c(1.5, 1.5, 1.5),
+                         ystar = c(2.1, 3.2, 2.2),
+                         p.signif = c("*","****","****"))
 
 speed_still <- ggplot()+
   facet_wrap(~Species)+
-  stat_pvalue_manual(speed_label_df, y.position = 5.5, step.increase = 0,
-                     label = "p.signif", hide.ns = TRUE, bracket.size = 0.75, size = 7)+
   stat_dots(speed_no_out, mapping = aes(x = Ablation, y = School_Speed, color = Ablation, fill = Ablation),
             side = "both", binwidth = unit(dot_binwidth, "npc"))+
-  geom_point(speed_no_out, mapping = aes(x = Ablation, y = Speed_Mean_Val), size = 5, color = "Black")+
+  geom_point(speed_no_out, mapping = aes(x = Ablation, y = Speed_Mean_Val), size = 2, color = "Black", shape=5)+
   geom_line(speed_no_out, mapping = aes(x = Ablation, y = Speed_Mean_Val, group = 1), size = 1, color = "Black", linetype = "dashed")+
   geom_errorbar(speed_no_out, mapping = aes(x = Ablation,ymin=Speed_Mean_Val-Speed_SD_Val, ymax=Speed_Mean_Val+Speed_SD_Val),
-                width=.2, color = "Black")+
+                width=.4, color = "Black")+
+  geom_text(data = speed_label_df, aes(x = xstar, y = ystar, label = p.signif), hjust = 'center',
+            vjust = 'center', size = star_size)+
   guides(fill = guide_legend(title = "Condition")) +
   scale_fill_manual(values=c(light_no_ab_color, light_ab_color, dark_no_ab_color, dark_ab_color)) +
   scale_color_manual(values=c(light_no_ab_color, light_ab_color, dark_no_ab_color, dark_ab_color)) +
   xlab("") +
-  ylab("Mean Speed of Fish (BL/s)") +
-  theme_light()+ 
+  ylab("Mean Speed\nof Fish (BL/s)") +
+  theme_light(base_size = text_size)+ 
   theme(legend.position = "none") +
-  ylim(0,5.75)+
-  theme(axis.text.x = element_text(size = text_size),
-        axis.text.y = element_text(size = text_size),
-        axis.title.y = element_text(size = text_size),
-        strip.text.x = element_text(size = text_size))+
+  ylim(0,5)+
   scale_x_discrete(labels=function(x){sub(",\\s", "\n", x)})
 
 speed_still
 ```
+
 ### Now we combine them
+
+```{r}
+school_stats_mega_plot <- 
+  (nnd_still / polar_still / speed_still + plot_annotation(tag_levels = 'A')) &
+  theme_minimal(base_size = text_size) &
+  theme(panel.grid.minor = element_blank(),
+        legend.position = "none")
+
+
+ggsave("Paper Figures/Figure 2.pdf", school_stats_mega_plot,
+       width = 4.7, height = 6, units = 'in')
+```
 
 ```{r}
 school_stats_mega_plot <- ggarrange(nnd_still, 
@@ -362,7 +365,10 @@ group_sum_data_1_binom_pred <- group_sum_data_1_binom %>% mutate(predVals = pred
                                                           (Species != "Giant Danio" & Group_Dist %% 1 == 0)) %>%
                                                           filter(Species != "Giant Danio" | 
                                                           (Species == "Giant Danio" & Group_Dist <= 5))
+```
 
+
+```{r}
 group_still <- ggplot(group_sum_data_1_trimmed, aes(Group_Dist, Percent_Group, color = Ablation))+
   facet_wrap(~Species, scales = "free")+
   geom_point()+
@@ -372,21 +378,18 @@ group_still <- ggplot(group_sum_data_1_trimmed, aes(Group_Dist, Percent_Group, c
   xlab("Maximum Distance to Connect Group (BL)")+
   ylab("Proportion of Time in 1 Group")+
   scale_y_continuous(breaks = seq(0,1,0.25), limits = c(0,1))+
-  theme_light()+
-  #theme(legend.position = "none") +
-  theme(axis.text.x = element_text(size = text_size),
-        axis.text.y = element_text(size = text_size),
-        axis.title.x = element_text(size = text_size),
-        axis.title.y = element_text(size = text_size),
-        strip.text.x = element_text(size = text_size))
+  theme_minimal(base_size = text_size)+
+  theme(legend.position = "none")
 
 group_still
-
-ggsave("Paper Figures/Subgroup_Graphs.png", group_still, width = 10, height = 7)
-ggsave("Paper Figures/Subgroup_Graphs.pdf", group_still, width = 10, height = 7)
-
 ```
 
+
+```{r}
+ggsave("Paper Figures/Subgroup_Graphs.pdf", group_still, 
+       width = 4.5, height = 2, units = "in")
+
+```
 
 ### Neuromast density
 
@@ -410,7 +413,6 @@ neuromast_counts <- read.csv("Data/neuromast_counts.csv") %>%
                                                       Superficial.LL.Scales++Superficial.Tailfin)/Area)
     
 ```
-
 
 ```{r}
 
@@ -451,80 +453,121 @@ my_comparisons = list(c("Cherry Barb", "Giant Danio"),c("Cherry Barb", "Neon Tet
 #         axis.title.y = element_text(size = text_size),
 #         strip.text.x = element_text(size = text_size))
 
+```
+
+```{r}
 head_canal <- ggplot(neuromast_per_area, aes(x = Fish, y = Head.Canal.Neuromast.Length, color = Fish, fill = Fish))+
-  stat_dots(side = "both", binwidth = unit(dot_binwidth, "npc")) +
-  geom_point(aes(y = Head.Canal.Neuromast.Length.Mean), color = "black")+
+  stat_dots(side = "both", binwidth = unit(neuromast_dot_binwidth, "npc")) +
+  geom_point(aes(y = Head.Canal.Neuromast.Length.Mean), color = "black", shape=4, size=2)+
   geom_errorbar(aes(ymin=Head.Canal.Neuromast.Length.Mean-Head.Canal.Neuromast.Length.SD,
-                    ymax=Head.Canal.Neuromast.Length.Mean+Head.Canal.Neuromast.Length.SD), width=.2, color = "black")+
-  ylab("Head Canal Neuromasts per cm")+
-  theme_classic()+
+                    ymax=Head.Canal.Neuromast.Length.Mean+Head.Canal.Neuromast.Length.SD), width=.4, color = "black")+
+  ylab("Canal Neuromasts\n(per cm)")+
+  scale_color_manual(values = fish_colors) +
+  scale_fill_manual(values = fish_colors) +
+  scale_x_discrete(labels = c('Giant Danio'='Giant\ndanio',
+                              'Neon Tetra'='Neon\ntetra',
+                              'Cherry Barb'='Cherry\nbarb')) +
+  theme_minimal(base_size = text_size)+
   xlab("")+
-  ylim(0,10)+
-  stat_compare_means(comparisons = list(c("Cherry Barb", "Neon Tetra")), method = "t.test", label.y = c(9),
-                     label = "p.signif", hide.ns = TRUE, bracket.size = 0.75, size = 7) +
-  theme(legend.position = "none") +
-  theme(axis.text.x = element_text(size = text_size),
-        axis.text.y = element_text(size = text_size),
-        axis.title.x = element_text(size = text_size),
-        axis.title.y = element_text(size = text_size),
-        strip.text.x = element_text(size = text_size))
+  ggtitle('Head') +
+  ylim(0,8)+
+  stat_compare_means(comparisons = list(c("Cherry Barb", "Neon Tetra")), method = "t.test", label.y = c(7.5),
+                     label = "p.signif", hide.ns = TRUE, bracket.size = 0.75, size = 5,
+                     tip.length = 0) +
+  theme(legend.position = "none",
+        panel.grid.minor = element_blank())
 
+head_canal
+```
+
+
+```{r}
 body_canal <- ggplot(neuromast_per_area, aes(x = Fish, y = Canal.Neuromast.Length, color = Fish, fill = Fish))+
-  stat_dots(side = "both", binwidth = unit(dot_binwidth, "npc")) +
-  geom_point(aes(y = Canal.Neuromast.Length.Mean), color = "black")+
+  stat_dots(side = "both", binwidth = unit(neuromast_dot_binwidth, "npc")) +
+  geom_point(aes(y = Canal.Neuromast.Length.Mean), color = "black", shape=4, size=2)+
   geom_errorbar(aes(ymin=Canal.Neuromast.Length.Mean-Canal.Neuromast.Length.SD,
-                    ymax=Canal.Neuromast.Length.Mean+Canal.Neuromast.Length.SD), width=.2, color = "black")+
-  ylab("Trunk Canal Neuromasts per cm")+
-  theme_classic()+
+                    ymax=Canal.Neuromast.Length.Mean+Canal.Neuromast.Length.SD), width=.4, color = "black")+
+  ylab("") + #Canal Neuromasts\n(per cm)")+
+  scale_color_manual(values = fish_colors) +
+  scale_fill_manual(values = fish_colors) +
+  scale_x_discrete(labels = c('Giant Danio'='Giant\ndanio',
+                              'Neon Tetra'='Neon\ntetra',
+                              'Cherry Barb'='Cherry\nbarb')) +
+  theme_minimal(base_size = text_size)+
   xlab("")+
-  ylim(0,13)+
-  theme(legend.position = "none") +
+  ggtitle('Trunk') +
+  ylim(0,8)+
+  theme(legend.position = "none",
+        panel.grid.minor = element_blank()) +
   stat_compare_means(comparisons = list(c("Giant Danio", "Neon Tetra"),
-                                        c("Cherry Barb", "Neon Tetra")), bracket.size = 0.75, size = 7,
-                     method = "t.test", label = "p.signif", hide.ns = TRUE, label.y = c(10,12)) +
-  theme(axis.text.x = element_text(size = text_size),
-        axis.text.y = element_text(size = text_size),
-        axis.title.x = element_text(size = text_size),
-        axis.title.y = element_text(size = text_size),
-        strip.text.x = element_text(size = text_size))
+                                        c("Cherry Barb", "Neon Tetra")), bracket.size = 0.75, size = 5,
+                     method = "t.test", label = "p.signif", hide.ns = TRUE, label.y = c(7.5,7),
+                     tip.length = 0)
 
+body_canal
+```
+
+
+```{r}
 head_super <- ggplot(neuromast_per_area, aes(x = Fish, y = Head.Superficial.Area, color = Fish, fill = Fish))+
-  stat_dots(side = "both", binwidth = unit(dot_binwidth, "npc")) +
-  geom_point(aes(y = Head.Superficial.Area.Mean), color = "black")+
+  stat_dots(side = "both", binwidth = unit(neuromast_dot_binwidth, "npc")) +
+  geom_point(aes(y = Head.Superficial.Area.Mean), color = "black", shape=4, size=2)+
   geom_errorbar(aes(ymin=Head.Superficial.Area.Mean-Head.Superficial.Area.SD,
-                    ymax=Head.Superficial.Area.Mean+Head.Superficial.Area.SD), width=.2, color = "black")+
-  ylab("Head Superficial Neuromasts per cm^2")+
-  theme_classic()+
+                    ymax=Head.Superficial.Area.Mean+Head.Superficial.Area.SD), width=.4, color = "black")+
+  ylab("Superficial Neuromasts\n(per cm^2)")+
+  theme_minimal(base_size = text_size)+
+  scale_color_manual(values = fish_colors) +
+  scale_fill_manual(values = fish_colors) +
+  scale_x_discrete(labels = c('Giant Danio'='Giant\ndanio',
+                              'Neon Tetra'='Neon\ntetra',
+                              'Cherry Barb'='Cherry\nbarb')) +
   xlab("")+
-  ylim(0,600)+
-  theme(legend.position = "none") +
-  stat_compare_means(comparisons = my_comparisons, bracket.size = 0.75, size = 7, label.y = c(400,475,550),
-                     method = "t.test", label = "p.signif", hide.ns = TRUE) +
-  theme(axis.text.x = element_text(size = text_size),
-        axis.text.y = element_text(size = text_size),
-        axis.title.x = element_text(size = text_size),
-        axis.title.y = element_text(size = text_size),
-        strip.text.x = element_text(size = text_size))
+  ylim(0,1060)+
+  theme(legend.position = "none",
+        panel.grid.minor = element_blank()) +
+  stat_compare_means(comparisons = my_comparisons, bracket.size = 0.75, size = 5, label.y = c(250,430,500),
+                     method = "t.test", label = "p.signif", hide.ns = TRUE,
+                     tip.length = 0)
 
+head_super
+```
+
+
+```{r}
 body_super <- ggplot(neuromast_per_area, aes(x = Fish, y = Body.Superficial.Area, color = Fish, fill = Fish))+
-  stat_dots(side = "both", binwidth = unit(dot_binwidth, "npc")) +
-  geom_point(aes(y = Body.Superficial.Area.Mean), color = "black")+
+  stat_dots(side = "both", binwidth = unit(neuromast_dot_binwidth, "npc")) +
+  geom_point(aes(y = Body.Superficial.Area.Mean), color = "black", shape=4, size=2)+
   geom_errorbar(aes(ymin=Body.Superficial.Area.Mean-Body.Superficial.Area.SD,
-                    ymax=Body.Superficial.Area.Mean+Body.Superficial.Area.SD), width=.2, color = "black")+
-  ylab("Trunk Superficial Neuromasts per cm^2")+
-  theme_classic()+
+                    ymax=Body.Superficial.Area.Mean+Body.Superficial.Area.SD), width=.4, color = "black")+
+  ylab("") + #Superficial Neuromasts\n(per cm^2)")+
+  scale_color_manual(values = fish_colors) +
+  scale_fill_manual(values = fish_colors) +
+  scale_x_discrete(labels = c('Giant Danio'='Giant\ndanio',
+                              'Neon Tetra'='Neon\ntetra',
+                              'Cherry Barb'='Cherry\nbarb')) +
+  theme_minimal(base_size = text_size)+
   xlab("")+
-  ylim(0,1500)+
-  theme(legend.position = "none") +
-  stat_compare_means(comparisons = my_comparisons, bracket.size = 0.75, size = 7
-                     , method = "t.test", label = "p.signif", hide.ns = TRUE, label.y = c(1000,1200,1400)) +
-  theme(axis.text.x = element_text(size = text_size),
-        axis.text.y = element_text(size = text_size),
-        axis.title.x = element_text(size = text_size),
-        axis.title.y = element_text(size = text_size),
-        strip.text.x = element_text(size = text_size))
+  ylim(0,1060)+
+  theme(legend.position = "none",
+        panel.grid.minor = element_blank()) +
+  stat_compare_means(comparisons = my_comparisons, bracket.size = 0.75, size = 5
+                     , method = "t.test", label = "p.signif", hide.ns = TRUE,
+                     label.y = c(400, 800, 900),
+                     tip.length = 0)
 
+body_super
+```
 
+```{r}
+neuromast_mega_plot <- 
+  (head_canal + body_canal + head_super + body_super) +
+  plot_annotation(tag_levels = 'A')
+
+ggsave("Paper Figures/neuromast_figures.pdf", neuromast_mega_plot, width = 4.2, height = 4)
+neuromast_mega_plot
+```
+
+```{r}
 neuromast_mega_plot <- ggarrange(head_canal,
                                     body_canal,
                                     head_super,

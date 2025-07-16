@@ -1,5 +1,0 @@
-"0",""
-"0","ggplot(data_both, aes(round_fish1_y,dist_diff))+"
-"0","  geom_point()+"
-"0","  geom_smooth(method = ""glm"", formula = ""y ~ poly(x,2)"")+"
-"0","  theme_classic()"

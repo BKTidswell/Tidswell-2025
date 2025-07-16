@@ -1,5 +1,0 @@
-"0",""
-"0","ggplot(school_data, aes(Trial, NND, color = interaction(Ablation,Species)))+"
-"0","  geom_point()+"
-"0","  geom_line(aes(y = predict(nnd_lmer_still)))+"
-"0","  theme_classic()"

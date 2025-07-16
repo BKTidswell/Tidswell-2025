@@ -1,6 +1,0 @@
-"0","```r
-rad2deg <- function(rad) {(rad * 180) / (pi)}
-deg2rad <- function(deg) {(deg * pi) / (180)}
-round_any <- function(x, accuracy, f=round){f(x/ accuracy) * accuracy}
-ang_mean <- function(x){rad2deg(atan(mean(sin(deg2rad(x)))/mean(cos(deg2rad(x)))))}
-```"

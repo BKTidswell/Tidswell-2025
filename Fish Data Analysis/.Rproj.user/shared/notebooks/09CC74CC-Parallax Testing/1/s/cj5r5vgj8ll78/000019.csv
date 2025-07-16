@@ -1,5 +1,0 @@
-"0","ggplot(data_2d_still_sum, aes(round_fish1_x,round_fish1_y, color = mean_dist_2d))+"
-"0","  geom_point(size = 4, shape = 15)+"
-"0","  scale_color_viridis() +"
-"0","  theme_classic() +"
-"0","  coord_fixed()"

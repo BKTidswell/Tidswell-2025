@@ -1,6 +1,0 @@
-"0",""
-"0","ggplot(data_both, aes(round_fish1_x,round_fish1_y, color = dist_diff))+"
-"0","  geom_point(size = 8, shape = 15)+"
-"0","  scale_color_viridis() +"
-"0","  theme_classic() +"
-"0","  coord_fixed()"

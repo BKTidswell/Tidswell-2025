@@ -1,7 +1,0 @@
-"0","ggplot(school_data, aes(Tailbeat_Freq, School_Speed, color = Ablation))+"
-"0","  facet_wrap(~ Species)+"
-"0","  geom_point()+"
-"0","  geom_smooth(method = ""lm"", se = T)+"
-"0","  theme_classic()"
-"1","[38;5;232m`geom_smooth()` using formula = 'y ~ x'[39m
-"

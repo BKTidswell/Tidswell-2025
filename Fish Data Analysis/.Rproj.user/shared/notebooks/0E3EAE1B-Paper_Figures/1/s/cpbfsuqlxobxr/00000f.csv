@@ -1,8 +1,0 @@
-"0","school_stats_mega_plot <- ggarrange(nnd_still, nnd_flow, "
-"0","                                    polar_still, polar_flow,"
-"0","                                    speed_still, speed_flow,"
-"0","                                    group_still, group_flow,"
-"0","          labels = c(""A"", ""B"", ""C"", ""D"", ""E"", ""F"", ""G"", ""H""),"
-"0","          ncol = 2, nrow = 4)"
-"0",""
-"0","ggsave(""Paper Figures/school_stats_mega_plot.png"", school_stats_mega_plot, width = 14, height = 30)"

@@ -1,6 +1,0 @@
-"0",""
-"0","ggplot(fish_comp_data_test, aes(x = Distance_M, fill = Species))+"
-"0","  geom_histogram(bins = 20, boundary = 0)+"
-"0","  facet_wrap(~Species)+"
-"0","  xlab(""Distance (cm)"")+"
-"0","  theme_classic()"

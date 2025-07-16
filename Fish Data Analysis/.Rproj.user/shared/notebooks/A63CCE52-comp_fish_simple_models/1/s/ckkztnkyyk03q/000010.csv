@@ -1,4 +1,0 @@
-"0","```r
-# sync_gam_viz <- getViz(sync_gam)
-# plotRGL(sm(sync_gam_viz, 1), fix = c(\"Distance\" = 0))
-```"
