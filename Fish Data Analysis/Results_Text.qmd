@@ -21,6 +21,7 @@ library(multcompView)
 library(lmtest)
 library(nlme)
 library(glmmTMB)
+library(pwrss)
 ```
 
 ## Functions and Variables
@@ -398,5 +399,26 @@ head_superficial_tukey
 body_superficial_aov <- aov(Body.Superficial.Area ~ Fish, data = neuromast_counts)
 body_superficial_tukey <- TukeyHSD(body_superficial_aov)
 body_superficial_tukey
+
+```
+
+## Power Analysis
+
+
+```{r}
+
+nnd_lmer_still <- lm(NND ~ Ablation*Species + Trial, data = school_data)
+pwrss.f.reg(r2 = summary(nnd_lmer_still)$adj.r.squared, k = 3, power = 0.80, alpha = 0.05)
+
+polar_lmer_still <- lm(School_Polar ~ Ablation*Species + Trial, data = school_data)
+pwrss.f.reg(r2 = summary(polar_lmer_still)$adj.r.squared, k = 3, power = 0.80, alpha = 0.05)
+
+speed_lmer_still <- lm(School_Speed ~ Ablation*Species + Trial, data = school_data)
+pwrss.f.reg(r2 = summary(speed_lmer_still)$adj.r.squared, k = 3, power = 0.80, alpha = 0.05)
+
+group_1_glm <- glm(Is_One ~ Ablation*Species*Group_Dist+Trial, data = group_sum_data_1_binom, family = "binomial")
+pwrss.z.logreg(p0 = 0.15, beta1 = -6.1244, r2.other.x = 0.20,
+               alpha = 0.05, power = 0.80,
+               dist = "normal")
 
 ```
