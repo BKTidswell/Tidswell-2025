@@ -159,9 +159,6 @@ group_sum_data_1 <- group_sum_data %>% complete(Species,Ablation,Group_Dist,Grou
 group_sum_data_1_binom <- all_fish_comp_groups %>% mutate(Is_One = ifelse(Groups == 1, 1, 0))
 ```
 
-
-
-
 ### School Stats Table Here
 
 ```{r}
@@ -358,7 +355,6 @@ saveRDS(school_ablation_stats_table,"Paper Tables/species_comp_table.RDS")
 
 ```
 
-
 ### Neuromast Density
 
 ```{r}
@@ -381,7 +377,6 @@ neuromast_counts <- read.csv("Data/neuromast_counts.csv") %>%
                                                       Superficial.LL.Scales++Superficial.Tailfin)/Area)
     
 ```
-
 
 ```{r}
 
