@@ -160,6 +160,52 @@ group_sum_data_1 <- group_sum_data %>% complete(Species,Ablation,Group_Dist,Grou
 group_sum_data_1_binom <- all_fish_comp_groups %>% mutate(Is_One = ifelse(Groups == 1, 1, 0))
 ```
 
+### Summarize number of tailbeats and trials
+
+```{r}
+summaryn <-
+  school_data |> 
+  group_by(Species, Ablation, Trial) |> 
+  summarize(ntailbeat = n()) |> 
+  summarize(ntrial = n(),
+            mintailbeat = min(ntailbeat),
+            meantailbeat = mean(ntailbeat),
+            totaltailbeat = sum(ntailbeat))
+
+bind_rows(
+  summaryn,
+
+  summaryn |> 
+    summarize(ntrial = sum(ntrial),
+              totaltailbeat = sum(totaltailbeat))
+) |> 
+  arrange(Species) |> 
+  relocate(totaltailbeat, .before = mintailbeat)
+```
+```{r}
+overalln <- school_data |> 
+  group_by(Species, Ablation, Trial) |> 
+  summarize(ntailbeat = n(), .groups = 'drop') |> 
+  summarize(mintailbeat = min(ntailbeat),
+            meantailbeat = mean(ntailbeat),
+            maxtailbeat = max(ntailbeat),
+            totaltailbeat = sum(ntailbeat))
+
+overalln
+```
+
+Since our stats are unbalanced, lets assume the worst case. We have the minimum number of trials, each of which has the minimum number of tail beats across the 3 species and 2 ablation conditions.
+```{r}
+nmin <- min(summaryn$ntrial) * overalln$mintailbeat * 3 * 2
+nmin
+
+nmean <- min(summaryn$ntrial) * overalln$meantailbeat * 3 * 2
+nmean
+
+nact <- overalln$totaltailbeat
+nact
+```
+
 ### School Stats Table Here
 
 ```{r}
@@ -404,19 +450,78 @@ body_superficial_tukey
 
 ## Power Analysis
 
+```{r}
+nnd_lm_full <- lm(NND ~ Ablation*Species + factor(Trial), data = school_data)
+nnd_lm_red <- lm(NND ~ Species + factor(Trial), data = school_data)
+
+AIC(nnd_lm_red, nnd_lm_full)
+
+dr2 <- summary(nnd_lm_full)$adj.r.squared - summary(nnd_lm_red)$adj.r.squared
+
+dr2
+```
+
 
 ```{r}
+pwrss.f.reg(r2 = dr2, 
+            k = length(nnd_lm_red$coefficients), 
+            m = length(nnd_lm_full$coefficients) - 
+              length(nnd_lm_red$coefficients),
+            alpha = 0.05, power = 0.8)
+```
 
-nnd_lmer_still <- lm(NND ~ Ablation*Species + Trial, data = school_data)
-pwrss.f.reg(r2 = summary(nnd_lmer_still)$adj.r.squared, k = 3, power = 0.80, alpha = 0.05)
 
-polar_lmer_still <- lm(School_Polar ~ Ablation*Species + Trial, data = school_data)
-pwrss.f.reg(r2 = summary(polar_lmer_still)$adj.r.squared, k = 3, power = 0.80, alpha = 0.05)
+```{r}
+polar_lm_full <- lm(School_Polar ~ Ablation*Species + factor(Trial), data = school_data)
+polar_lm_red <- lm(School_Polar ~ Species + factor(Trial), data = school_data)
 
-speed_lmer_still <- lm(School_Speed ~ Ablation*Species + Trial, data = school_data)
-pwrss.f.reg(r2 = summary(speed_lmer_still)$adj.r.squared, k = 3, power = 0.80, alpha = 0.05)
+AIC(polar_lm_red, polar_lm_full)
 
-group_1_glm <- glm(Is_One ~ Ablation*Species*Group_Dist+Trial, data = group_sum_data_1_binom, family = "binomial")
+dr2_polar <- summary(polar_lm_full)$adj.r.squared - summary(polar_lm_red)$adj.r.squared
+
+dr2_polar
+```
+
+
+```{r}
+pwrss.f.reg(r2 = dr2_polar, 
+            k = length(polar_lm_red$coefficients), 
+            m = length(polar_lm_full$coefficients) - 
+              length(polar_lm_red$coefficients),
+            alpha = 0.05, power = 0.8)
+```
+
+
+```{r}
+speed_lm_full <- lm(School_Speed ~ Ablation*Species + factor(Trial), data = school_data)
+speed_lm_red <- lm(School_Speed ~ Species + factor(Trial), data = school_data)
+
+AIC(speed_lm_red, speed_lm_full)
+
+dr2_speed <- summary(speed_lm_full)$adj.r.squared - summary(speed_lm_red)$adj.r.squared
+
+dr2_speed
+```
+
+
+```{r}
+pwrss.f.reg(r2 = dr2_speed, 
+            k = length(speed_lm_red$coefficients), 
+            m = length(speed_lm_full$coefficients) - 
+              length(speed_lm_red$coefficients),
+            alpha = 0.05, power = 0.8)
+```
+
+```{r}
+pwrss.f.reg(r2 = 0.06, 
+            k = 25, 
+            m = 3,
+            alpha = 0.05, power = 0.8)
+```
+
+
+```{r}
+group_1_glm <- glm(Is_One ~ Ablation*Species*Group_Dist+factor(Trial), data = group_sum_data_1_binom, family = "binomial")
 pwrss.z.logreg(p0 = 0.15, beta1 = -6.1244, r2.other.x = 0.20,
                alpha = 0.05, power = 0.80,
                dist = "normal")
