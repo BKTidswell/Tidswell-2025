@@ -22,6 +22,8 @@ library(lmtest)
 library(nlme)
 library(glmmTMB)
 library(pwrss)
+library(broom)
+library(flextable)
 ```
 
 ## Functions and Variables
@@ -67,11 +69,11 @@ y_offset <- 1.15
 
 #constrast names
 
-contrast_names <- c("LNCB-LYCB","LNCB-LNGD","LNCB-LYGD","LNCB-LNNT","LNCB-LYNT",
-                   "LYCB-LNGD","LYCB-LYGD","LYCB-LNNT","LYCB-LYNT",
-                   "LNGD-LYGD","LNGD-LNNT","LNGD-LYNT",
-                   "LYGD-LNNT","LYGD-LYNT",
-                   "LNNT-LYNT")
+contrast_names <- c("CB_ctl-CB_ab","CB_ctl-GD_ctl","CB_ctl-GD_ab","CB_ctl-NT_ctl","CB_ctl-NT_ab",
+                   "CB_ab-GD_ctl","CB_ab-GD_ab","CB_ab-NT_ctl","CB_ab-NT_ab",
+                   "GD_ctl-GD_ab","GD_ctl-NT_ctl","GD_ctl-NT_ab",
+                   "GD_ab-NT_ctl","GD_ab-NT_ab",
+                   "NT_ctl-NT_ab")
 ```
 
 ```{r}
@@ -209,7 +211,6 @@ nact
 ### School Stats Table Here
 
 ```{r}
-
 nnd_no_out <- school_data %>% group_by(Ablation,Species) %>%
                               filter(!is.na(NND)) %>%
                               filter(NND >= median(NND, nan.rm=T) - IQR(NND,na.rm =T)*1.5 &
@@ -226,20 +227,32 @@ em_out <- summary(emmeans(nnd_lmer_still, pairwise ~ Ablation*Species))$contrast
 names(em_out) <- contrast_names
 multcompLetters(em_out)
 
+nnd_s_aov_me
+```
+
+
+```{r}
 plot(nnd_lmer_still)
 qqnorm(resid(nnd_lmer_still))
 qqline(resid(nnd_lmer_still))
+```
 
+
+```{r}
 ggplot(nnd_no_out, aes(Trial, NND, color = interaction(Ablation,Species)))+
   geom_point()+
   geom_line(aes(y = predict(nnd_lmer_still)))+
   theme_classic()
+```
 
+
+```{r}
 polar_no_out <- school_data %>% group_by(Ablation,Species) %>%
                               filter(!is.na(School_Polar)) %>%
                               filter(School_Polar >= median(School_Polar, nan.rm=T) - IQR(School_Polar,na.rm =T)*1.5 &
                                      School_Polar <= median(School_Polar, nan.rm=T) + IQR(School_Polar,na.rm =T)*1.5) %>%
-                              ungroup()
+                              ungroup() |> 
+  mutate(logit_polar = logit(School_Polar))
 
 #polar_lmer_still <- lm(School_Polar ~ Ablation*Species + Trial, data = school_data)
 polar_lmer_still <- lme(School_Polar ~ Ablation*Species, 
@@ -251,10 +264,47 @@ em_out <- summary(emmeans(polar_lmer_still, pairwise ~ Ablation*Species))$contra
 names(em_out) <- contrast_names
 multcompLetters(em_out)
 
+polar_s_aov_me
+```
+
+
+```{r}
 plot(polar_lmer_still)
 qqnorm(resid(polar_lmer_still))
 qqline(resid(polar_lmer_still))
+```
 
+```{r}
+polar_no_out <- school_data %>% group_by(Ablation,Species) %>%
+                              filter(!is.na(School_Polar)) %>%
+                              filter(School_Polar >= median(School_Polar, nan.rm=T) - IQR(School_Polar,na.rm =T)*1.5 &
+                                     School_Polar <= median(School_Polar, nan.rm=T) + IQR(School_Polar,na.rm =T)*1.5) %>%
+                              ungroup() |> 
+  mutate(logit_polar = logit(School_Polar))
+
+#polar_lmer_still <- lm(School_Polar ~ Ablation*Species + Trial, data = school_data)
+polar_lmer_logit_still <- lme(logit_polar ~ Ablation*Species, 
+                             random = ~1|Trial/Species,
+                             correlation = corAR1(form = ~1|Trial/Species), 
+                             data = polar_no_out)
+polar_s_aov_logit_me <- Anova(polar_lmer_logit_still, type=c("III"))
+
+polar_s_aov_logit_me
+
+em_logit_out <- summary(emmeans(polar_lmer_logit_still, pairwise ~ Ablation*Species))$contrasts$p.value
+names(em_logit_out) <- contrast_names
+multcompLetters(em_logit_out)
+```
+
+
+```{r}
+plot(polar_lmer_logit_still)
+qqnorm(resid(polar_lmer_logit_still))
+qqline(resid(polar_lmer_logit_still))
+```
+
+
+```{r}
 speed_no_out <- school_data %>% group_by(Ablation,Species) %>%
                               filter(!is.na(School_Speed)) %>%
                               filter(School_Speed >= median(School_Speed, nan.rm=T) - IQR(School_Speed,na.rm =T)*1.5 &
@@ -267,22 +317,63 @@ speed_lmer_still <- lme(School_Speed ~ Ablation*Species,
                              correlation = corAR1(form = ~1|Trial/Species), 
                              data = speed_no_out)
 speed_s_aov_me <- Anova(speed_lmer_still, type=c("III"))
+
+speed_s_aov_me
+
 em_out <- summary(emmeans(speed_lmer_still, pairwise ~ Ablation*Species))$contrasts$p.value
 names(em_out) <- contrast_names
 multcompLetters(em_out)
+```
 
+
+```{r}
 plot(speed_lmer_still)
 qqnorm(resid(speed_lmer_still))
 qqline(resid(speed_lmer_still))
+```
 
+
+```{r}
 group_1_glm <- glmmTMB(Is_One ~ Ablation*Species*Group_Dist + ar1(as.factor(Tailbeat) + 0|Trial:Species), 
                              data = group_sum_data_1_binom, family = "binomial")
 group_1_aov <- Anova(group_1_glm, type=c("III"))
+group_1_aov
+```
+
+
+```{r}
 emmeans(group_1_glm, pairwise ~ Ablation*Species | Group_Dist)
 em_out <- summary(emmeans(group_1_glm, pairwise ~ Ablation*Species | Group_Dist))$contrasts$p.value
 names(em_out) <- contrast_names
 multcompLetters(em_out)
+```
 
+
+```{r}
+overall_stats_table <-
+  bind_rows(
+  tidy(nnd_s_aov_me) |> 
+    mutate(var = "NND"),
+  
+  tidy(polar_s_aov_logit_me) |> 
+    mutate(var = "polar"),
+
+  tidy(speed_s_aov_me) |> 
+    mutate(var = "speed"),
+  
+  tidy(group_1_aov) |> 
+    mutate(var = "groups")
+) |> 
+  filter(term != "(Intercept)") |> 
+  relocate(var) |> 
+  group_by(var)
+  
+saveRDS(overall_stats_table,"Paper Tables/overall_stats_table.RDS")
+
+```
+
+Build the table
+```{r}
 values_to_grab <- c(2,3,4)
 values_to_grab_groups <- c(2,3,4,5,6,7,8)
 
@@ -293,12 +384,12 @@ glmm_school_stats_table <- tibble(Stat = c(rep("NND",3),rep("Polarization",3),re
                        "Ablation x Species x Group Distance")),
        DF = c(rep(c(rep(length(nnd_lmer_still$data$NND)-3,3)),times = 3),rep(length(nnd_lmer_still$data$NND)-3,7)),
        Chisq = round(c(nnd_s_aov_me$`Chisq`[values_to_grab],
-                 polar_s_aov_me$`Chisq`[values_to_grab],
+                 polar_s_aov_logit_me$`Chisq`[values_to_grab],
                  speed_s_aov_me$`Chisq`[values_to_grab],
                  group_1_aov$`Chisq`[values_to_grab_groups]),2),
        
        P_Val = round(c(nnd_s_aov_me$`Pr(>Chisq)`[values_to_grab],
-                 polar_s_aov_me$`Pr(>Chisq)`[values_to_grab],
+                 polar_s_aov_logit_me$`Pr(>Chisq)`[values_to_grab],
                  speed_s_aov_me$`Pr(>Chisq)`[values_to_grab],
                  group_1_aov$`Pr(>Chisq)`[values_to_grab_groups]),3),
        
